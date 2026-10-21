@@ -10,6 +10,9 @@
   "show_stats": false,
   "remote": {"enabled": true, "bind": "0.0.0.0", "port": 8765},
   "cec": {"enabled": false, "device": ""},
+  "jellyfin": {"url": "", "api_key": "", "user": ""},
+  "ambient": {"enabled": true, "after_minutes": 10, "photos": "~/Pictures"},
+  "profiles": [],
   "vars": {
     "jellyfin_url": "",
     "iptv_playlist": "",

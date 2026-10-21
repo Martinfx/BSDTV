@@ -28,6 +28,12 @@ DEFAULTS = {
     "clock_24h": True,
     "remote": {"enabled": True, "bind": "0.0.0.0", "port": 8765},
     "cec": {"enabled": False, "device": ""},
+    "jellyfin": {"url": "", "api_key": "", "user": ""},
+    "ambient": {"enabled": True, "after_minutes": 10, "photos": "~/Pictures"},
+    # Each profile may override PROFILE_KEYS, e.g.
+    # {"id": "kids", "name": "Kids", "color": "#f6ae2d", "dock": ["youtube"], "jellyfin_user": "kids"}
+    "profiles": [],
+    "profile": "",
     "vars": {
         "jellyfin_url": "",
         "iptv_playlist": "",
@@ -84,12 +90,37 @@ def read_json(path):
     return data if isinstance(data, dict) else {}
 
 
+# Settings a profile can override.
+PROFILE_KEYS = ("dock", "hidden", "theme", "language", "featured", "layout", "ambient")
+
+DEFAULT_PROFILE = {"id": "", "name": "BSDTV", "color": "#8ab4f8"}
+
+
+def profiles(config):
+    valid = [p for p in config.get("profiles") or [] if isinstance(p, dict) and p.get("id")]
+    return [dict(DEFAULT_PROFILE, **p) for p in valid] or [dict(DEFAULT_PROFILE)]
+
+
+def active_profile(config):
+    found = profiles(config)
+    return next((p for p in found if p["id"] == config.get("profile")), found[0])
+
+
+def apply_profile(config):
+    """Overlay the active profile's settings onto the config."""
+    profile = active_profile(config)
+    overrides = {k: profile[k] for k in PROFILE_KEYS if k in profile}
+    if profile.get("jellyfin_user"):
+        overrides["jellyfin"] = {"user": profile["jellyfin_user"]}
+    return deep_merge(config, overrides)
+
+
 def load_config():
     config = DEFAULTS
     for path in (find_data_file("config.json"), user_dir() / "config.json"):
         if path:
             config = deep_merge(config, read_json(path))
-    return config
+    return apply_profile(config)
 
 
 def save_user_setting(key, value):

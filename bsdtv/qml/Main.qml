@@ -28,6 +28,8 @@ ApplicationWindow {
             focus: true
             onSettingsRequested: overlay.show(settingsComponent)
             onPowerRequested: overlay.show(powerComponent)
+            onSearchRequested: overlay.show(searchComponent)
+            onProfileRequested: overlay.show(profileComponent)
         }
     }
 
@@ -42,6 +44,7 @@ ApplicationWindow {
 
     Loader {
         id: overlay
+        property var media: ({})
 
         function show(component) {
             overlay.sourceComponent = component
@@ -68,6 +71,31 @@ ApplicationWindow {
     }
 
     Component {
+        id: searchComponent
+        SearchPanel {
+            focus: true
+            onClosed: overlay.hide()
+        }
+    }
+
+    Component {
+        id: profileComponent
+        ProfilePicker {
+            focus: true
+            onClosed: overlay.hide()
+        }
+    }
+
+    Component {
+        id: detailsComponent
+        MediaDetails {
+            item: overlay.media
+            focus: true
+            onClosed: overlay.hide()
+        }
+    }
+
+    Component {
         id: powerComponent
         PowerMenu {
             focus: true
@@ -83,9 +111,26 @@ ApplicationWindow {
         anchors.bottomMargin: 48
     }
 
+    Loader {
+        id: ambient
+        anchors.fill: parent
+        z: 10
+        active: TV.ambientActive
+        focus: active
+        sourceComponent: Ambient {
+            focus: true
+        }
+        onActiveChanged: if (!active) (overlay.active ? overlay : home).forceActiveFocus()
+    }
+
     Connections {
         target: TV
         function onMessage(text) { toast.show(text) }
+        function onMediaRequested(item) {
+            overlay.media = item
+            // Later: this may come from a panel that the overlay is about to replace.
+            Qt.callLater(overlay.show, detailsComponent)
+        }
         function onRaiseRequested() {
             if (!overlay.active)
                 home.forceActiveFocus()

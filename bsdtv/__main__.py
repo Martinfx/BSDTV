@@ -6,6 +6,24 @@ import sys
 from pathlib import Path
 
 
+def activity_filter(backend):
+    """An event filter that reports remote, keyboard and mouse activity to the backend."""
+    from PySide6.QtCore import QEvent, QObject
+
+    activity = {QEvent.Type.KeyPress, QEvent.Type.MouseButtonPress, QEvent.Type.MouseMove, QEvent.Type.Wheel}
+
+    class ActivityFilter(QObject):
+        def eventFilter(self, obj, event):
+            if event.type() not in activity:
+                return False
+            waking = backend.ambientActive and event.type() == QEvent.Type.KeyPress
+            backend.touch()
+            # The key that wakes the TV only wakes it; it must not also act on the home screen.
+            return waking
+
+    return ActivityFilter(backend)
+
+
 def run_launcher(argv):
     parser = argparse.ArgumentParser(prog="bsdtv", description="BSDTV home screen")
     parser.add_argument("--windowed", action="store_true", help="run in a 1280x720 window (development)")
@@ -29,6 +47,7 @@ def run_launcher(argv):
         QFontDatabase.addApplicationFont(str(font))
 
     backend = Backend()
+    app.installEventFilter(activity_filter(backend))
     if not args.no_remote and not args.screenshot:
         backend.start_remote()
 

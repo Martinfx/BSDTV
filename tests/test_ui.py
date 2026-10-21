@@ -38,9 +38,13 @@ def ui(qapp):
     started = []
     monkeypatch.setattr("bsdtv.runner.AppRunner.start", lambda self, app_id, argv: started.append(app_id))
 
+    from bsdtv.__main__ import activity_filter
+
     messages = []
     qInstallMessageHandler(lambda mode, ctx, msg: messages.append(msg))
     backend = Backend()
+    activity = activity_filter(backend)
+    qapp.installEventFilter(activity)
     qmlRegisterSingletonInstance(Backend, "BSDTV", 1, 0, "TV", backend)
     engine = QQmlApplicationEngine()
     engine.setInitialProperties({"windowed": True})
@@ -50,6 +54,7 @@ def ui(qapp):
     QTest.qWait(200)
     yield window, backend, started, messages
     qInstallMessageHandler(None)
+    qapp.removeEventFilter(activity)
     window.close()
     backend.shutdown()
     monkeypatch.undo()
@@ -58,8 +63,8 @@ def ui(qapp):
 def focused(window):
     item = window.activeFocusItem()
     data = item.property("modelData")
-    if data:
-        return data["name"]
+    if isinstance(data, dict):
+        return data.get("name") or data.get("title")
     for prop in ("name", "label", "text"):
         if item.property(prop):
             return item.property(prop)
@@ -106,9 +111,49 @@ def test_back_goes_to_tabs_and_apps_tab(ui):
     assert started[-1] == "youtube"
 
 
+def test_search_finds_apps_by_typing(ui):
+    window, backend, started, _ = ui
+    press(window, Qt.Key_Escape)
+    assert focused(window) == "Apps"
+    press(window, Qt.Key_Right)
+    assert focused(window) == "Search"
+    press(window, Qt.Key_Return)
+    assert focused(window) == "a"  # on-screen keyboard
+    press(window, Qt.Key_K, Qt.Key_O, Qt.Key_D)
+    QTest.qWait(500)  # debounce
+    assert backend.searchResults["term"] == "kod"
+    assert [a["appId"] for a in backend.searchResults["apps"]] == ["kodi"]
+    press(window, Qt.Key_Right)  # from the keyboard's first row, "Right" moves along the keys
+    assert focused(window) == "b"
+    press(window, Qt.Key_Escape)
+    assert focused(window) == "Search"
+
+
+def test_profile_picker_shows_the_default_profile(ui):
+    window, backend, _, _ = ui
+    press(window, Qt.Key_Left, Qt.Key_Left, Qt.Key_Left)
+    assert focused(window) == backend.profile["name"]
+    press(window, Qt.Key_Return)
+    assert focused(window) == backend.profile["name"]  # the entry in "Who's watching?"
+    press(window, Qt.Key_Escape)
+
+
+def test_ambient_mode_comes_and_goes_without_acting(ui):
+    window, backend, started, _ = ui
+    before = len(started)
+    backend.startAmbient()
+    QTest.qWait(50)
+    assert backend.ambientActive
+    assert "Ambient" in focused(window)
+    press(window, Qt.Key_Return)  # wakes the TV only
+    assert not backend.ambientActive
+    assert len(started) == before
+    assert focused(window) == backend.profile["name"]
+
+
 def test_settings_switch_to_classic_layout(ui):
     window, backend, _, _ = ui
-    press(window, Qt.Key_Escape, Qt.Key_Right, Qt.Key_Return)
+    press(window, Qt.Key_Right, Qt.Key_Right, Qt.Key_Right, Qt.Key_Right, Qt.Key_Return)
     assert focused(window) == "Theme"
     press(window, Qt.Key_Down)
     assert focused(window) == "Home screen"

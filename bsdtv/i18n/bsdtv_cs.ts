@@ -2,6 +2,15 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="cs_CZ">
 <context>
+    <name>Ambient</name>
+    <message>
+        <location filename="../qml/Ambient.qml" line="107"/>
+        <source>dddd d MMMM</source>
+        <extracomment>Date format for the clock, see QDate::toString().</extracomment>
+        <translation>dddd d. MMMM</translation>
+    </message>
+</context>
+<context>
     <name>HeroBanner</name>
     <message>
         <location filename="../qml/HeroBanner.qml" line="126"/>
@@ -12,6 +21,49 @@
         <location filename="../qml/HeroBanner.qml" line="141"/>
         <source>Open</source>
         <translation>Spustit</translation>
+    </message>
+</context>
+<context>
+    <name>MediaDetails</name>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="16"/>
+        <source>%1 h %2 min</source>
+        <translation>%1 h %2 min</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="17"/>
+        <source>%1 min</source>
+        <translation>%1 min</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="84"/>
+        <source>%1 left</source>
+        <translation>zbývá %1</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="92"/>
+        <source>Watch on</source>
+        <translation>Sledovat v</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="102"/>
+        <source>Resume in Jellyfin</source>
+        <translation>Pokračovat v Jellyfinu</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="102"/>
+        <source>Jellyfin</source>
+        <translation>Jellyfin</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="115"/>
+        <source>Play now (mpv)</source>
+        <translation>Přehrát hned (mpv)</translation>
+    </message>
+    <message>
+        <location filename="../qml/MediaDetails.qml" line="126"/>
+        <source>Back</source>
+        <translation>Zpět</translation>
     </message>
 </context>
 <context>
@@ -45,6 +97,42 @@
         <location filename="../qml/PowerMenu.qml" line="82"/>
         <source>Cancel</source>
         <translation>Zrušit</translation>
+    </message>
+</context>
+<context>
+    <name>ProfilePicker</name>
+    <message>
+        <location filename="../qml/ProfilePicker.qml" line="25"/>
+        <source>Who&apos;s watching?</source>
+        <translation>Kdo se dívá?</translation>
+    </message>
+</context>
+<context>
+    <name>SearchPanel</name>
+    <message>
+        <location filename="../qml/SearchPanel.qml" line="61"/>
+        <source>Search apps, films and series</source>
+        <translation>Hledat aplikace, filmy a seriály</translation>
+    </message>
+    <message>
+        <location filename="../qml/SearchPanel.qml" line="96"/>
+        <source>Apps</source>
+        <translation>Aplikace</translation>
+    </message>
+    <message>
+        <location filename="../qml/SearchPanel.qml" line="116"/>
+        <source>Films and series</source>
+        <translation>Filmy a seriály</translation>
+    </message>
+    <message>
+        <location filename="../qml/SearchPanel.qml" line="129"/>
+        <source>Searching…</source>
+        <translation>Hledám…</translation>
+    </message>
+    <message>
+        <location filename="../qml/SearchPanel.qml" line="129"/>
+        <source>Nothing found</source>
+        <translation>Nic nenalezeno</translation>
     </message>
 </context>
 <context>
@@ -182,22 +270,32 @@
 <context>
     <name>TvHome</name>
     <message>
-        <location filename="../qml/TvHome.qml" line="126"/>
+        <location filename="../qml/TvHome.qml" line="147"/>
         <source>Your apps</source>
         <translation>Vaše aplikace</translation>
     </message>
     <message>
-        <location filename="../qml/TvHome.qml" line="127"/>
+        <location filename="../qml/TvHome.qml" line="148"/>
+        <source>Continue watching</source>
+        <translation>Pokračovat ve sledování</translation>
+    </message>
+    <message>
+        <location filename="../qml/TvHome.qml" line="149"/>
+        <source>Recently added</source>
+        <translation>Nově přidané</translation>
+    </message>
+    <message>
+        <location filename="../qml/TvHome.qml" line="150"/>
         <source>Streaming</source>
         <translation>Streamování</translation>
     </message>
     <message>
-        <location filename="../qml/TvHome.qml" line="128"/>
+        <location filename="../qml/TvHome.qml" line="151"/>
         <source>Movies &amp; music</source>
         <translation>Filmy a hudba</translation>
     </message>
     <message>
-        <location filename="../qml/TvHome.qml" line="129"/>
+        <location filename="../qml/TvHome.qml" line="152"/>
         <source>Games</source>
         <translation>Hry</translation>
     </message>
@@ -205,22 +303,27 @@
 <context>
     <name>TvTopBar</name>
     <message>
-        <location filename="../qml/TvTopBar.qml" line="33"/>
+        <location filename="../qml/TvTopBar.qml" line="59"/>
         <source>For you</source>
         <translation>Pro vás</translation>
     </message>
     <message>
-        <location filename="../qml/TvTopBar.qml" line="43"/>
+        <location filename="../qml/TvTopBar.qml" line="70"/>
         <source>Apps</source>
         <translation>Aplikace</translation>
     </message>
     <message>
-        <location filename="../qml/TvTopBar.qml" line="68"/>
+        <location filename="../qml/TvTopBar.qml" line="94"/>
+        <source>Search</source>
+        <translation>Hledat</translation>
+    </message>
+    <message>
+        <location filename="../qml/TvTopBar.qml" line="111"/>
         <source>Settings</source>
         <translation>Nastavení</translation>
     </message>
     <message>
-        <location filename="../qml/TvTopBar.qml" line="78"/>
+        <location filename="../qml/TvTopBar.qml" line="121"/>
         <source>Power</source>
         <translation>Napájení</translation>
     </message>

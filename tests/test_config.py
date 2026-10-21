@@ -47,3 +47,26 @@ def test_bundled_themes_are_complete():
 def test_unknown_theme_falls_back_to_graphite():
     theme = config.load_theme("does-not-exist")
     assert theme["name"] == "Graphite" and theme["tiles"] == "flat"
+
+
+def test_profiles_override_settings(isolated_dirs):
+    etc = isolated_dirs / "etc"
+    etc.mkdir()
+    (etc / "config.json").write_text(json.dumps({
+        "dock": ["kodi"],
+        "profiles": [{"id": "dad", "name": "Dad"},
+                     {"id": "kids", "name": "Kids", "dock": ["youtube"], "theme": "sunrise",
+                      "jellyfin_user": "kids"}],
+    }))
+    assert config.load_config()["dock"] == ["kodi"]
+    assert config.active_profile(config.load_config())["id"] == "dad"
+
+    config.save_user_setting("profile", "kids")
+    cfg = config.load_config()
+    assert cfg["dock"] == ["youtube"] and cfg["theme"] == "sunrise"
+    assert cfg["jellyfin"]["user"] == "kids"
+
+
+def test_without_profiles_there_is_one_default():
+    found = config.profiles(config.load_config())
+    assert len(found) == 1 and found[0]["id"] == ""

@@ -58,7 +58,59 @@ is replaced. After editing by hand, run `bsdtv-ctl reload`.
 | `remote.bind` / `remote.port` | phone remote; `127.0.0.1` makes it local only |
 | `cec.enabled` / `cec.device` | start the HDMI-CEC bridge; empty device = autodetect |
 | `vars` | values for `{placeholders}` in `apps.json` |
+| `jellyfin` | `url` (or `vars.jellyfin_url`), `api_key`, optional `user`: see below |
+| `ambient` | `enabled`, `after_minutes`, `photos` (folder): see below |
+| `profiles`, `profile` | see below |
 | `vars.drm_browser` | browser with Widevine for Netflix & co.; empty hides those tiles. `install.sh --drm` sets it |
+
+## Jellyfin
+
+With a Jellyfin server configured, the home screen gets "Continue watching"
+(first row) and "Recently added" (after "Your apps"), the banner shows film
+backdrops, search covers the library, and ambient mode can use the backdrops.
+
+```json
+"jellyfin": {"url": "http://192.168.1.10:8096", "api_key": "0123abcd…", "user": "martin"}
+```
+
+- Create the key in Jellyfin: Dashboard → API Keys → +. API keys have admin
+  rights, so keep the key in `~tv/.config/bsdtv/config.json` with mode 600
+  rather than the world-readable system file.
+- `user` picks whose progress and library to show; empty means the first
+  visible user. A profile can set its own with `jellyfin_user`.
+- OK on a film opens its details page. "Watch on Jellyfin" opens it in the
+  Jellyfin web app (needs the `jellyfin` app, i.e. Firefox and
+  `vars.jellyfin_url`), which also records your progress. "Play now (mpv)"
+  streams it straight into mpv from where you stopped, but does not report
+  progress back yet.
+- The rows refresh every 5 minutes and whenever you come back from an app.
+
+## Profiles
+
+```json
+"profiles": [
+  {"id": "martin", "name": "Martin", "color": "#8ab4f8"},
+  {"id": "kids", "name": "Děti", "color": "#fdd663", "dock": ["youtube", "kodi"],
+   "theme": "sunrise", "jellyfin_user": "kids"}
+]
+```
+
+The avatar left of the tabs opens "Who's watching?". A profile can override
+`dock`, `hidden`, `theme`, `language`, `featured`, `layout` and `ambient`, plus
+`jellyfin_user`. The chosen profile is remembered (`profile` in the user
+config). What a profile sets wins over the Settings panel.
+
+## Ambient mode
+
+```json
+"ambient": {"enabled": true, "after_minutes": 10, "photos": "~/Pictures"}
+```
+
+After `after_minutes` without remote, keyboard or mouse input on the home
+screen, BSDTV shows a slideshow of the photos in `photos` (JPEG, PNG, WebP,
+subfolders included) with a clock. Without photos it uses film backdrops from
+Jellyfin, or a plain background. Any key returns to the home screen; that key
+does nothing else. It never starts while an app is running.
 
 ## Apps
 

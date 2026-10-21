@@ -17,6 +17,8 @@ FocusScope {
 
     signal settingsRequested()
     signal powerRequested()
+    signal searchRequested()
+    signal profileRequested()
 
     Rectangle {
         anchors.fill: parent
@@ -41,7 +43,7 @@ FocusScope {
         id: topBar
         z: 1
         // Out of the way once you scroll into the rows, back when you return to the top.
-        opacity: forYou.currentIndex <= 1 || topBar.activeFocus || topBar.currentTab !== 0 ? 1 : 0
+        opacity: forYou.currentIndex === 0 || topBar.activeFocus || topBar.currentTab !== 0 ? 1 : 0
 
         Behavior on opacity {
             enabled: !home.reducedMotion
@@ -58,6 +60,8 @@ FocusScope {
         KeyNavigation.down: home.page
         onSettingsRequested: home.settingsRequested()
         onPowerRequested: home.powerRequested()
+        onSearchRequested: home.searchRequested()
+        onProfileRequested: home.profileRequested()
     }
 
     ListView {
@@ -86,7 +90,8 @@ FocusScope {
             readonly property var row: rowLoader.index > 0 ? TV.rows[rowLoader.index - 1] : null
 
             width: forYou.width
-            sourceComponent: rowLoader.index === 0 ? heroComponent : rowComponent
+            sourceComponent: rowLoader.index === 0 ? heroComponent
+                           : rowLoader.row && rowLoader.row.style === "media" ? mediaComponent : rowComponent
         }
     }
 
@@ -99,7 +104,23 @@ FocusScope {
             unit: home.unit
             slides: TV.featured
             reducedMotion: home.reducedMotion
-            onLaunched: appId => TV.launch(appId)
+            onActivated: slide => slide.mediaId ? TV.openMedia(slide.mediaId) : TV.launch(slide.appId)
+        }
+    }
+
+    Component {
+        id: mediaComponent
+        MediaRow {
+            // The Loader delegate above carries this row's data.
+            readonly property var row: parent ? parent.row : null
+            focus: true
+            unit: home.unit
+            title: home.rowTitle(row ? row.key : "")
+            items: row ? row.items : []
+            cardWidth: home.tileWidth * 1.3
+            inset: home.margin
+            reducedMotion: home.reducedMotion
+            onActivated: item => TV.openMedia(item.mediaId)
         }
     }
 
@@ -124,6 +145,8 @@ FocusScope {
     function rowTitle(key) {
         switch (key) {
         case "your_apps": return qsTr("Your apps")
+        case "continue": return qsTr("Continue watching")
+        case "latest": return qsTr("Recently added")
         case "streaming": return qsTr("Streaming")
         case "media": return qsTr("Movies & music")
         case "games": return qsTr("Games")

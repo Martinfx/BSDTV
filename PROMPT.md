@@ -24,13 +24,16 @@ Steps:
    - whether to block ads for the whole network (`--adblock`)
    - whether I want Netflix / Disney+ / Prime Video / Max / Spotify (`--drm`;
      needs the ports tree for Widevine, see README)
+   - whether I use Jellyfin: server address, an API key (Dashboard → API Keys)
+     and which user to show
+   - who watches the TV (profiles) and a folder of photos for ambient mode
    - whether I use a HDMI-CEC adapter
    - whether SSH should stay enabled afterwards
 3. Clone the repository on the box, run `sh install.sh --dry-run` with the
    chosen options and show me the summary. Only after I confirm, run it for
    real with `--yes`.
 4. Write my answers into `/usr/local/etc/bsdtv/config.json` (dock, vars,
-   cec), keeping it valid JSON. Validate with
+   cec, jellyfin, profiles, ambient), keeping it valid JSON. Validate with
    `python3 -m json.tool /usr/local/etc/bsdtv/config.json`.
 5. Reboot, wait for the box to come back, then check the session:
    `ps -U tv -o pid,command | grep -E 'Xorg|openbox|bsdtv'` and

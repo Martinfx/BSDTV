@@ -108,3 +108,12 @@ def test_featured_uses_config_entries_or_dock():
     slides = apps.featured(found, {"featured": [{"app": "b", "title": "Movie night", "image": "/x.jpg"},
                                                 {"app": "missing"}]})
     assert slides == [dict(found[1].as_dict(), title="Movie night", image="/x.jpg")]
+
+
+def test_search_matches_all_words_in_name_or_caption():
+    found = apps.parse_apps({"apps": [
+        {"id": "a", "name": "Kodi", "caption": "Movies and music", "exec": ["a"]},
+        {"id": "b", "name": "Spotify", "caption": "Music and podcasts", "exec": ["b"]}]})
+    assert [a["appId"] for a in apps.search(found, "music")] == ["a", "b"]
+    assert [a["appId"] for a in apps.search(found, "MUSIC pod")] == ["b"]
+    assert apps.search(found, "  ") == []

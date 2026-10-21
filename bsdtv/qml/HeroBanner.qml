@@ -19,7 +19,7 @@ FocusScope {
         : Qt.color(hero.slide.textColor).hslSaturation > 0.4 ? hero.slide.textColor : Qt.lighter(hero.slide.color, 2.5)
     readonly property color base: hero.theme.background
 
-    signal launched(string appId)
+    signal activated(var slide)
 
     function step(delta) {
         if (hero.slides.length > 0)
@@ -168,6 +168,6 @@ FocusScope {
 
     Keys.onLeftPressed: hero.step(-1)
     Keys.onRightPressed: hero.step(1)
-    Keys.onReturnPressed: if (hero.slide) hero.launched(hero.slide.appId)
-    Keys.onEnterPressed: if (hero.slide) hero.launched(hero.slide.appId)
+    Keys.onReturnPressed: if (hero.slide) hero.activated(hero.slide)
+    Keys.onEnterPressed: if (hero.slide) hero.activated(hero.slide)
 }

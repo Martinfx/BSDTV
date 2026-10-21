@@ -1,10 +1,34 @@
 """The QML-facing backend: app models, settings, theme and the remote controller."""
 
-from PySide6.QtCore import (QAbstractListModel, QByteArray, QCoreApplication, QLocale, QModelIndex,
-                            QObject, Property, QTimer, Qt, Signal, Slot)
+import os
+import random
+import shutil
+import threading
+from pathlib import Path
 
-from . import __version__, apps, config, remote, system
+from PySide6.QtCore import (QAbstractListModel, QByteArray, QCoreApplication, QLocale, QModelIndex,
+                            QObject, Property, QTimer, QUrl, Qt, Signal, Slot)
+
+from . import __version__, apps, config, jellyfin, remote, system
 from .runner import AppRunner
+
+PHOTO_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
+MAX_PHOTOS = 300
+
+
+def find_photos(folder):
+    """Shuffled image URLs from a folder tree, for the ambient screen."""
+    if not folder:
+        return []
+    root = Path(os.path.expanduser(folder))
+    found = []
+    if root.is_dir():
+        for dirpath, _dirs, files in os.walk(root):
+            found.extend(Path(dirpath) / f for f in files if Path(f).suffix.lower() in PHOTO_SUFFIXES)
+            if len(found) > MAX_PHOTOS * 4:
+                break
+    random.shuffle(found)
+    return [QUrl.fromLocalFile(str(p)).toString() for p in found[:MAX_PHOTOS]]
 
 
 LANGUAGES = ("en", "cs")
@@ -106,6 +130,13 @@ class Backend(QObject):
     raiseRequested = Signal()
     languageChanged = Signal(str)
     message = Signal(str)
+    rowsChanged = Signal()
+    mediaRequested = Signal("QVariantMap")
+    searchChanged = Signal()
+    ambientChanged = Signal()
+    # Results of background Jellyfin requests: (generation, payload).
+    _mediaFetched = Signal(int, object)
+    _searchFetched = Signal(int, object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -117,7 +148,16 @@ class Backend(QObject):
         self._all_model = AppModel(self)
         self.app_list = []
         self._rows = []
+        self._app_rows = []
         self._featured = []
+        self._app_featured = []
+        self._media = {"resume": [], "latest": []}
+        self._search = {"term": "", "apps": [], "media": [], "busy": False}
+        self._jellyfin = None
+        self._generation = 0
+        self._search_generation = 0
+        self._ambient = False
+        self._photos = []
         self._lang = ""
         self._config = {}
         self._theme = {}
@@ -126,6 +166,17 @@ class Backend(QObject):
         self.token = remote.load_token()
         self.bridge = _RemoteBridge(self)
         self._server = None
+        self._mediaFetched.connect(self._on_media, Qt.ConnectionType.QueuedConnection)
+        self._searchFetched.connect(self._on_search, Qt.ConnectionType.QueuedConnection)
+
+        self._idle = QTimer(self)
+        self._idle.setSingleShot(True)
+        self._idle.timeout.connect(self._on_idle)
+        self._media_timer = QTimer(self)
+        self._media_timer.setInterval(5 * 60_000)
+        self._media_timer.timeout.connect(self.refreshMedia)
+        self._media_timer.start()
+
         self.reload()
 
         self._info_timer = QTimer(self)
@@ -162,6 +213,9 @@ class Backend(QObject):
         self.runningAppChanged.emit()
         if not app_id:
             self.raiseRequested.emit()
+            # Coming back from watching something: progress has changed.
+            self.refreshMedia()
+            self.touch()
 
     # --- properties ------------------------------------------------------
 
@@ -210,13 +264,38 @@ class Backend(QObject):
             return ""
         return f"http://{self._ip}:{opts.get('port', 8765)}/?t={self.token}"
 
-    @Property("QVariantList", notify=settingsChanged)
+    @Property("QVariantList", notify=rowsChanged)
     def rows(self):
         return self._rows
 
-    @Property("QVariantList", notify=settingsChanged)
+    @Property("QVariantList", notify=rowsChanged)
     def featured(self):
         return self._featured
+
+    @Property("QVariantList", notify=settingsChanged)
+    def profiles(self):
+        return config.profiles(self._config)
+
+    @Property("QVariantMap", notify=settingsChanged)
+    def profile(self):
+        return config.active_profile(self._config)
+
+    @Property("QVariantMap", notify=searchChanged)
+    def searchResults(self):
+        return self._search
+
+    @Property(bool, notify=ambientChanged)
+    def ambientActive(self):
+        return self._ambient
+
+    @Property("QVariantList", notify=ambientChanged)
+    def ambientPhotos(self):
+        backdrops = [i["backdrop"] for i in self._media["latest"] + self._media["resume"] if i["backdrop"]]
+        return self._photos or list(dict.fromkeys(backdrops))
+
+    @Property(bool, notify=settingsChanged)
+    def hasMpv(self):
+        return shutil.which("mpv") is not None and self._jellyfin is not None
 
     @Property(str, notify=settingsChanged)
     def language(self):
@@ -234,8 +313,16 @@ class Backend(QObject):
         self._theme = config.load_theme(self._config.get("theme", "midnight"))
         lang = resolve_language(self._config.get("language"))
         self.app_list = apps.load_apps(self._config, lang=lang)
-        self._rows = apps.home_rows(self.app_list, self._config.get("dock", []))
-        self._featured = apps.featured(self.app_list, self._config)
+        self._app_rows = apps.home_rows(self.app_list, self._config.get("dock", []))
+        self._app_featured = apps.featured(self.app_list, self._config)
+        client = jellyfin.from_config(self._config)
+        identity = (lambda c: c and (c.url, c.api_key, c.user))
+        if identity(client) != identity(self._jellyfin):
+            self._jellyfin = client
+            self._media = {"resume": [], "latest": []}
+            self.refreshMedia()
+        self._photos = find_photos((self._config.get("ambient") or {}).get("photos"))
+        self._update_rows()
         dock = apps.order_dock(self.app_list, self._config.get("dock", []))
         dock_ids = {a.id for a in dock}
         self._dock_model.set_apps(dock)
@@ -246,6 +333,126 @@ class Backend(QObject):
         if lang != self._lang:
             self._lang = lang
             self.languageChanged.emit(lang)
+        self.touch()
+
+    def _update_rows(self):
+        self._rows = apps.with_media(self._app_rows, self._media["resume"], self._media["latest"])
+        # Explicit "featured" entries win; otherwise films from Jellyfin, then apps.
+        media_slides = jellyfin.slides(self._media["latest"] + self._media["resume"])
+        explicit = bool(self._config.get("featured"))
+        self._featured = self._app_featured if explicit or not media_slides else media_slides
+        self.rowsChanged.emit()
+        self.ambientChanged.emit()
+
+    # --- Jellyfin --------------------------------------------------------
+
+    def _in_background(self, signal, generation, work):
+        def run():
+            try:
+                result = work()
+            except jellyfin.JellyfinError as exc:
+                print(f"bsdtv: jellyfin: {exc}")
+                result = None
+            signal.emit(generation, result)
+        threading.Thread(target=run, name="bsdtv-jellyfin", daemon=True).start()
+
+    @Slot()
+    def refreshMedia(self):
+        client = self._jellyfin
+        if client is None:
+            if any(self._media.values()):
+                self._media = {"resume": [], "latest": []}
+                self._update_rows()
+            return
+        self._generation += 1
+        self._in_background(self._mediaFetched, self._generation,
+                            lambda: {"resume": client.resume(), "latest": client.latest()})
+
+    def _on_media(self, generation, result):
+        if generation == self._generation and result is not None:
+            self._media = result
+            self._update_rows()
+
+    def _find_media(self, media_id):
+        pool = self._media["resume"] + self._media["latest"] + self._search["media"]
+        return next((m for m in pool if m["mediaId"] == media_id), None)
+
+    @Slot(str)
+    def openMedia(self, media_id):
+        item = self._find_media(media_id)
+        if item:
+            self.mediaRequested.emit(item)
+
+    @Slot(str)
+    def watchInJellyfin(self, media_id):
+        app = next((a for a in self.app_list if a.id == "jellyfin"), None)
+        if app is None or self._jellyfin is None:
+            self.message.emit("Jellyfin: no Jellyfin app (set vars.jellyfin_url and install Firefox)")
+            return
+        variables = dict(self._config.get("vars", {}), jellyfin_url=self._jellyfin.web_url(media_id))
+        self.runner.start(app.id, app.command(variables))
+
+    @Slot(str)
+    def playMedia(self, media_id):
+        item = self._find_media(media_id)
+        if item is None or not self.hasMpv:
+            return
+        argv = ["mpv", "--fs", f"--force-media-title={item['title']}"]
+        if item["resumeSeconds"]:
+            argv.append(f"--start={item['resumeSeconds']}")
+        self.runner.start("jellyfin", argv + [self._jellyfin.stream_url(media_id)])
+
+    # --- search ----------------------------------------------------------
+
+    @Slot(str)
+    def search(self, term):
+        term = term.strip()
+        self._search_generation += 1
+        self._search = {"term": term, "apps": apps.search(self.app_list, term), "media": [],
+                        "busy": bool(term and self._jellyfin)}
+        self.searchChanged.emit()
+        if term and self._jellyfin:
+            client = self._jellyfin
+            self._in_background(self._searchFetched, self._search_generation, lambda: client.search(term))
+
+    def _on_search(self, generation, result):
+        if generation == self._search_generation:
+            self._search = dict(self._search, media=result or [], busy=False)
+            self.searchChanged.emit()
+
+    # --- profiles --------------------------------------------------------
+
+    @Slot(str)
+    def setProfile(self, profile_id):
+        config.save_user_setting("profile", profile_id)
+        self.reload()
+
+    # --- ambient mode ----------------------------------------------------
+
+    @Slot()
+    def touch(self):
+        """User activity: leave the ambient screen and restart the idle countdown."""
+        if self._ambient:
+            self._ambient = False
+            self.ambientChanged.emit()
+        opts = self._config.get("ambient") or {}
+        if opts.get("enabled", True):
+            self._idle.start(int(max(0.1, float(opts.get("after_minutes", 10))) * 60_000))
+        else:
+            self._idle.stop()
+
+    @Slot()
+    def startAmbient(self):
+        if not self._ambient:
+            self._ambient = True
+            self.ambientChanged.emit()
+
+    def _on_idle(self):
+        # Never cover a running app (someone may be watching a film).
+        if self.runner.app_id:
+            self.touch()
+        else:
+            self.startAmbient()
 
     @Slot(str)
     def launch(self, app_id):

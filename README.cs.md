@@ -10,7 +10,7 @@ placené „doporučené" řádky.
 
 [English](README.md)
 
-![Domovská obrazovka](docs/img/tv-home-cs.png)
+![Domovská obrazovka](docs/img/j-home-cs.png)
 
 Inspirováno projektem [CleanYourTV](https://github.com/Gathin23/cleanyourtv),
 který čistí Android TV od bloatwaru. BSDTV jde opačnou cestou: místo čištění
@@ -25,6 +25,15 @@ nic zbytečného není.
   ikony. Tmavé grafitové barvy a ploché dlaždice v barvách jednotlivých
   značek. Ovládání šipkami, OK, Zpět a Domů. Pět barevných motivů. Jednodušší
   „klasická" obrazovka (hodiny, dok a mřížka) se zapne v Nastavení.
+- **Vlastní filmy z Jellyfinu**: řady „Pokračovat ve sledování" a „Nově
+  přidané" s obrázky a ukazatelem rozkoukanosti, plakáty filmů v banneru a
+  stránka detailu s tlačítkem „Pokračovat v Jellyfinu" (nebo přehrát hned v mpv).
+- **Profily**: „Kdo se dívá?" s kulatými avatary; každý profil může mít vlastní
+  oblíbené aplikace, motiv, jazyk a uživatele Jellyfinu.
+- **Vyhledávání** v aplikacích i v knihovně Jellyfinu, s klávesnicí na obrazovce
+  pro ovladač (nebo psaním z mobilu).
+- **Ambient mód**: po chvíli nečinnosti prezentace vašich fotek (nebo plakátů
+  filmů) s velkými hodinami. Nikdy nepřekryje běžící aplikaci.
 - **Čeština a angličtina**, podle jazyka systému nebo volby v Nastavení.
 - **Aplikace**: Kodi, YouTube (TV rozhraní, s uBlock Origin), Jellyfin,
   prohlížeč, IPTV a hudba v mpv, Moonlight (streamování her), RetroArch.
@@ -45,9 +54,11 @@ nic zbytečného není.
 - **Vratné**: každá změna se zapisuje do `/var/db/bsdtv`, `uninstall.sh`
   vrátí systém do původního stavu.
 
-| Řady | Aplikace | Klasická obrazovka |
+| Pokračovat ve sledování | Detail | Vyhledávání |
 | --- | --- | --- |
-| ![Řady](docs/img/tv-rows-cs.png) | ![Aplikace](docs/img/tv-apps-cs.png) | ![Klasická](docs/img/home.png) |
+| ![Pokračovat ve sledování](docs/img/j-continue-cs.png) | ![Detail](docs/img/j-details-cs.png) | ![Vyhledávání](docs/img/j-search-cs.png) |
+| **Profily** | **Ambient mód** | **Aplikace** |
+| ![Profily](docs/img/j-profiles-cs.png) | ![Ambient](docs/img/j-ambient-cs.png) | ![Aplikace](docs/img/tv-apps-cs.png) |
 
 ## Instalace
 
@@ -98,6 +109,18 @@ Omezení: jde o softwarový Widevine (L3), takže služby pustí nižší rozli�
 binárkách, které FreeBSD oficiálně nepodporuje, takže ho aktualizace Brave
 nebo Widevine může rozbít. Když Brave nenaběhne, zkuste v `~tv/.xinitrc`
 `BSDTV_BRAVE_FLAGS=--no-sandbox` (oslabí to sandbox prohlížeče).
+
+### Napojení na Jellyfin
+
+V Jellyfinu vytvořte API klíč (Nástěnka → API klíče) a doplňte ho do
+`/usr/local/etc/bsdtv/config.json`:
+
+```json
+"jellyfin": {"url": "http://192.168.1.10:8096", "api_key": "…", "user": "martin"}
+```
+
+Bez `user` se použije první viditelný uživatel. Profily, ambient mód a další
+volby popisuje [docs/CONFIG.md](docs/CONFIG.md).
 
 ## Ovládání
 

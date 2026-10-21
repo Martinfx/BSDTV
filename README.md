@@ -9,7 +9,7 @@ blocking. No accounts, no telemetry, no content rows paid for by someone else.
 
 [Česky](README.cs.md)
 
-![Home screen](docs/img/tv-home.png)
+![Home screen](docs/img/j-home.png)
 
 Inspired by [CleanYourTV](https://github.com/Gathin23/cleanyourtv), which
 debloats Android TVs. BSDTV takes the other route: instead of cleaning up a
@@ -24,6 +24,15 @@ nothing to remove in the first place.
   round icons. Dark graphite colours with flat tiles in each app's brand
   colours. Made for a remote: arrows, OK, Back, Home. Five themes. A simpler "classic" home (clock, dock
   and grid) is one switch away in Settings.
+- **Your own films from Jellyfin**: "Continue watching" and "Recently added"
+  rows with artwork and progress bars, film backdrops in the banner, and a
+  details page with "Watch on Jellyfin" (or play straight away in mpv).
+- **Profiles**: "Who's watching?" with round avatars; each profile can have its
+  own favourite apps, theme, language and Jellyfin user.
+- **Search** across apps and the Jellyfin library, with an on-screen keyboard
+  for the remote (or type on the phone remote).
+- **Ambient mode**: after a while without input, a slideshow of your photos
+  (or film backdrops) with a big clock. Never covers a running app.
 - **English and Czech**, following the system language or chosen in Settings.
 - **Apps**: Kodi, YouTube (the TV interface, with uBlock Origin), Jellyfin, a
   web browser, IPTV and a music folder in mpv, Moonlight game streaming,
@@ -44,9 +53,11 @@ nothing to remove in the first place.
 - **Reversible**: every change is recorded in `/var/db/bsdtv`;
   `uninstall.sh` puts the system back.
 
-| Rows | Apps tab | Classic home |
+| Continue watching | Details | Search |
 | --- | --- | --- |
-| ![Rows](docs/img/tv-rows.png) | ![Apps](docs/img/tv-apps.png) | ![Classic](docs/img/home.png) |
+| ![Continue watching](docs/img/j-continue.png) | ![Details](docs/img/j-details.png) | ![Search](docs/img/j-search.png) |
+| **Profiles** | **Ambient mode** | **Classic home** |
+| ![Profiles](docs/img/j-profiles.png) | ![Ambient](docs/img/j-ambient.png) | ![Classic](docs/img/home.png) |
 
 ## Install
 
@@ -117,7 +128,14 @@ bsdtv-ctl url                 # phone remote address
 - `/usr/local/etc/bsdtv/themes/<name>/theme.json`: themes (colours and an
   optional wallpaper).
 
-See [docs/CONFIG.md](docs/CONFIG.md) for every option, adding apps and making
+To show your Jellyfin library, create an API key in Jellyfin (Dashboard → API
+Keys) and add it:
+
+```json
+"jellyfin": {"url": "http://192.168.1.10:8096", "api_key": "…", "user": "martin"}
+```
+
+See [docs/CONFIG.md](docs/CONFIG.md) for every option, profiles, ambient mode, adding apps and making
 themes.
 
 ## How it works
@@ -160,6 +178,10 @@ an empty grid until you install e.g. `mpv` or `firefox`.
   only root privilege is `doas /sbin/shutdown`.
 - To change the pairing code, delete `~tv/.config/bsdtv/remote-token` and
   restart the home screen.
+- A Jellyfin API key has admin rights. Put it in
+  `~tv/.config/bsdtv/config.json` (`chmod 600`), not in the world-readable
+  `/usr/local/etc/bsdtv/config.json`. "Play now (mpv)" passes it in the stream
+  URL, so it is visible in the process list while a film plays.
 
 ## Status and roadmap
 
@@ -167,7 +189,8 @@ BSDTV is young. Ideas for what comes next:
 
 - prebuilt USB image (poudriere / `release(7)`), so no FreeBSD install is needed
 - more translations (`bsdtv/i18n/`, made with `pyside6-lupdate` / `lrelease`)
-- app icons, and "continue watching" rows and banner artwork from Kodi/Jellyfin
+- app icons; the same "continue watching" rows for Kodi libraries
+- playback progress sync for "Play now (mpv)" (the Jellyfin web app already syncs)
 - Wayland session (cage or labwc) once FreeBSD's Wayland apps are mature enough
 - Bluetooth remotes and game controllers out of the box
 

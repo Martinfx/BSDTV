@@ -132,3 +132,23 @@ def featured(apps, cfg):
                 slide[key] = entry[key]
         slides.append(slide)
     return slides or [a.as_dict() for a in apps[:5]]
+
+
+def with_media(rows, resume, latest):
+    """Add Jellyfin rows: "Continue watching" first, "Recently added" after "Your apps"."""
+    rows = list(rows)
+    if latest:
+        after = next((i + 1 for i, r in enumerate(rows) if r["key"] == "your_apps"), len(rows))
+        rows.insert(after, {"key": "latest", "style": "media", "items": latest})
+    if resume:
+        rows.insert(0, {"key": "continue", "style": "media", "items": resume})
+    return rows
+
+
+def search(apps, term):
+    """Apps whose name or caption contains every word of the query."""
+    words = term.lower().split()
+    if not words:
+        return []
+    return [a.as_dict() for a in apps
+            if all(w in f"{a.name} {a.caption}".lower() for w in words)]
