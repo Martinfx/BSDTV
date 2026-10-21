@@ -13,7 +13,7 @@ def run_launcher(argv):
     parser.add_argument("--screenshot", metavar="PNG", help="render the home screen to PNG and exit")
     args = parser.parse_args(argv)
 
-    from PySide6.QtCore import QTimer
+    from PySide6.QtCore import QLocale, QTimer, QTranslator
     from PySide6.QtGui import QFontDatabase, QGuiApplication
     import shiboken6
     from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
@@ -34,6 +34,20 @@ def run_launcher(argv):
 
     qmlRegisterSingletonInstance(Backend, "BSDTV", 1, 0, "TV", backend)
     engine = QQmlApplicationEngine()
+
+    translator = QTranslator(app)
+    i18n = Path(__file__).resolve().parent / "i18n"
+
+    def apply_language(lang):
+        app.removeTranslator(translator)
+        if lang != "en" and translator.load(str(i18n / f"bsdtv_{lang}.qm")):
+            app.installTranslator(translator)
+        # Dates and times follow the UI language.
+        QLocale.setDefault(QLocale(lang))
+        engine.retranslate()
+
+    apply_language(backend.language)
+    backend.languageChanged.connect(apply_language)
     engine.setInitialProperties({
         "windowed": bool(args.windowed or args.screenshot or not backend.settings.get("fullscreen", True)),
     })

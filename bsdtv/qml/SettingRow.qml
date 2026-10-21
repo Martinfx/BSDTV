@@ -13,7 +13,7 @@ Rectangle {
     signal increase()
 
     width: parent ? parent.width : 400
-    height: 64
+    height: 54
     radius: 14
     color: row.highlighted ? Qt.rgba(1, 1, 1, 0.14) : "transparent"
     activeFocusOnTab: true
@@ -27,7 +27,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         text: row.label
         color: row.theme.text
-        font.pixelSize: 22
+        font.pixelSize: 20
     }
 
     Text {
@@ -36,7 +36,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         text: row.adjustable && row.highlighted ? "‹  " + row.value + "  ›" : row.value
         color: row.highlighted ? row.theme.accent : row.theme.subtext
-        font.pixelSize: 22
+        font.pixelSize: 20
     }
 
     Keys.onLeftPressed: if (row.adjustable) row.decrease()

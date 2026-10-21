@@ -1,0 +1,163 @@
+import QtQuick
+import BSDTV
+
+FocusScope {
+    id: home
+
+    readonly property var theme: TV.theme
+    readonly property bool reducedMotion: TV.settings.reduced_motion === true
+    readonly property real unit: home.height
+    readonly property real margin: home.width * 0.055
+    readonly property int columns: Math.max(4, Math.min(8, (TV.settings.columns || 5) + 1))
+    readonly property real tileWidth: (home.width - 2 * home.margin) / (home.columns + 0.4)
+    readonly property real gridSpacing: home.unit * 0.024
+    readonly property real gridTileWidth: (home.width - 2 * home.margin - (home.columns - 1) * home.gridSpacing) / home.columns
+    readonly property Item page: topBar.currentTab === 0 ? forYou : appsGrid
+
+    signal settingsRequested()
+    signal powerRequested()
+
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: home.theme.background2 }
+            GradientStop { position: 0.6; color: home.theme.background }
+        }
+    }
+
+    Image {
+        anchors.fill: parent
+        visible: home.theme.wallpaper !== ""
+        source: home.theme.wallpaper ? "file://" + home.theme.wallpaper : ""
+        sourceSize.width: home.width
+        sourceSize.height: home.height
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        Accessible.ignored: true
+    }
+
+    TvTopBar {
+        id: topBar
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: home.unit * 0.045
+        anchors.leftMargin: home.margin
+        anchors.rightMargin: home.margin
+        unit: home.unit
+        KeyNavigation.down: home.page
+        onSettingsRequested: home.settingsRequested()
+        onPowerRequested: home.powerRequested()
+    }
+
+    ListView {
+        id: forYou
+        anchors.top: topBar.bottom
+        anchors.topMargin: home.unit * 0.04
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: home.margin
+        // Rows run off the right edge, hinting that there is more to scroll to.
+        visible: topBar.currentTab === 0
+        focus: true
+        clip: true
+        interactive: false
+        keyNavigationEnabled: true
+        spacing: home.unit * 0.045
+        bottomMargin: home.unit * 0.12
+        highlightMoveDuration: home.reducedMotion ? 0 : 250
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: forYou.height * 0.5
+        highlightRangeMode: ListView.ApplyRange
+        model: 1 + TV.rows.length
+        KeyNavigation.priority: KeyNavigation.AfterItem
+        KeyNavigation.up: topBar
+
+        delegate: Loader {
+            id: rowLoader
+
+            required property int index
+            readonly property var row: rowLoader.index > 0 ? TV.rows[rowLoader.index - 1] : null
+
+            // The banner keeps the right margin; rows run to the screen edge.
+            width: rowLoader.index === 0 ? forYou.width - home.margin : forYou.width
+            sourceComponent: rowLoader.index === 0 ? heroComponent : rowComponent
+        }
+    }
+
+    Component {
+        id: heroComponent
+        HeroBanner {
+            height: home.unit * 0.42
+            focus: true
+            unit: home.unit
+            slides: TV.featured
+            reducedMotion: home.reducedMotion
+            onLaunched: appId => TV.launch(appId)
+        }
+    }
+
+    Component {
+        id: rowComponent
+        ContentRow {
+            // The Loader delegate above carries this row's data.
+            readonly property var row: parent ? parent.row : null
+            focus: true
+            unit: home.unit
+            title: home.rowTitle(row ? row.key : "")
+            apps: row ? row.apps : []
+            tileWidth: home.tileWidth
+            reducedMotion: home.reducedMotion
+            runningApp: TV.runningApp
+            onLaunched: appId => TV.launch(appId)
+        }
+    }
+
+    function rowTitle(key) {
+        switch (key) {
+        case "your_apps": return qsTr("Your apps")
+        case "streaming": return qsTr("Streaming")
+        case "media": return qsTr("Movies & music")
+        case "games": return qsTr("Games")
+        }
+        return ""
+    }
+
+    AppGrid {
+        id: appsGrid
+        anchors.top: topBar.bottom
+        anchors.topMargin: home.unit * 0.06
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: home.margin
+        anchors.rightMargin: home.margin - home.gridSpacing
+        visible: topBar.currentTab === 1
+        model: TV.allAppsModel
+        tileWidth: home.gridTileWidth
+        tileHeight: home.gridTileWidth * 0.5625
+        spacing: home.gridSpacing
+        theme: home.theme
+        reducedMotion: home.reducedMotion
+        runningApp: TV.runningApp
+        KeyNavigation.priority: KeyNavigation.AfterItem
+        KeyNavigation.up: topBar
+        Keys.onEscapePressed: topBar.forceActiveFocus()
+        onLaunched: appId => TV.launch(appId)
+    }
+
+    Component.onCompleted: forYou.forceActiveFocus()
+
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Menu) {
+            home.settingsRequested()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Escape && !topBar.activeFocus) {
+            // Back from deep in the page jumps to the top, like on a TV.
+            forYou.currentIndex = 0
+            topBar.forceActiveFocus()
+            event.accepted = true
+        }
+    }
+}

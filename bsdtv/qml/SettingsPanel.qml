@@ -17,6 +17,21 @@ FocusScope {
             TV.setSetting("theme", ids[(panel.themeIndex + step + ids.length) % ids.length])
     }
 
+    readonly property var languages: ["auto", "cs", "en"]
+
+    function languageName(code) {
+        switch (code) {
+        case "cs": return "Čeština"
+        case "en": return "English"
+        }
+        return qsTr("Automatic")
+    }
+
+    function cycleLanguage(step) {
+        const i = Math.max(0, panel.languages.indexOf(panel.settings.language || "auto"))
+        TV.setSetting("language", panel.languages[(i + step + panel.languages.length) % panel.languages.length])
+    }
+
     function onOff(value) {
         return value ? qsTr("On") : qsTr("Off")
     }
@@ -56,16 +71,36 @@ FocusScope {
                 label: qsTr("Theme")
                 value: TV.themes.length > 0 ? TV.themes[panel.themeIndex].name : ""
                 focus: true
-                KeyNavigation.down: columnsRow
+                KeyNavigation.down: layoutRow
                 onDecrease: panel.cycleTheme(-1)
                 onIncrease: panel.cycleTheme(1)
+            }
+            SettingRow {
+                id: layoutRow
+                theme: panel.theme
+                label: qsTr("Home screen")
+                value: panel.settings.layout === "classic" ? qsTr("Classic") : qsTr("TV with rows")
+                KeyNavigation.up: themeRow
+                KeyNavigation.down: languageRow
+                onDecrease: TV.setSetting("layout", panel.settings.layout === "classic" ? "tv" : "classic")
+                onIncrease: TV.setSetting("layout", panel.settings.layout === "classic" ? "tv" : "classic")
+            }
+            SettingRow {
+                id: languageRow
+                theme: panel.theme
+                label: qsTr("Language")
+                value: panel.languageName(panel.settings.language || "auto")
+                KeyNavigation.up: layoutRow
+                KeyNavigation.down: columnsRow
+                onDecrease: panel.cycleLanguage(-1)
+                onIncrease: panel.cycleLanguage(1)
             }
             SettingRow {
                 id: columnsRow
                 theme: panel.theme
                 label: qsTr("Apps per row")
                 value: String(panel.settings.columns)
-                KeyNavigation.up: themeRow
+                KeyNavigation.up: languageRow
                 KeyNavigation.down: motionRow
                 onDecrease: TV.setSetting("columns", Math.max(3, panel.settings.columns - 1))
                 onIncrease: TV.setSetting("columns", Math.min(7, panel.settings.columns + 1))

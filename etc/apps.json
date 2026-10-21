@@ -3,7 +3,9 @@
     {
       "id": "kodi",
       "name": "Kodi",
-      "caption": "Movies, series, music and live TV",
+      "caption": {"en": "Movies, series, music and live TV", "cs": "Filmy, seriály, hudba a živá TV"},
+      "tagline": {"en": "Your whole film and music library in one place", "cs": "Celá vaše knihovna filmů a hudby na jednom místě"},
+      "category": "media",
       "color": "#17b2e7",
       "pkg": "kodi",
       "exec": ["kodi", "--standalone", "-fs"]
@@ -11,7 +13,9 @@
     {
       "id": "youtube",
       "name": "YouTube",
-      "caption": "YouTube TV interface, remote friendly",
+      "caption": {"en": "YouTube TV interface, remote friendly", "cs": "YouTube v TV rozhraní, pro ovladač"},
+      "tagline": {"en": "Videos without the ads, made for the remote", "cs": "Videa bez reklam, uzpůsobená pro ovladač"},
+      "category": "streaming",
       "color": "#ff2d2d",
       "pkg": "firefox",
       "exec": ["firefox", "--kiosk", "--profile", "{youtube_profile}", "{youtube_url}"]
@@ -19,7 +23,9 @@
     {
       "id": "jellyfin",
       "name": "Jellyfin",
-      "caption": "Your own media server",
+      "caption": {"en": "Your own media server", "cs": "Váš vlastní mediální server"},
+      "tagline": {"en": "Stream from your own server, no subscription", "cs": "Streamujte z vlastního serveru, bez předplatného"},
+      "category": "media",
       "color": "#8c4bdc",
       "pkg": "firefox",
       "requires": ["jellyfin_url"],
@@ -28,7 +34,9 @@
     {
       "id": "netflix",
       "name": "Netflix",
-      "caption": "Series and films",
+      "caption": {"en": "Series and films", "cs": "Seriály a filmy"},
+      "tagline": {"en": "Series and films", "cs": "Seriály a filmy"},
+      "category": "streaming",
       "color": "#e50914",
       "pkg": "linux-brave",
       "requires": ["drm_browser"],
@@ -37,7 +45,8 @@
     {
       "id": "disneyplus",
       "name": "Disney+",
-      "caption": "Disney, Pixar, Marvel, Star Wars",
+      "caption": {"en": "Disney, Pixar, Marvel, Star Wars", "cs": "Disney, Pixar, Marvel, Star Wars"},
+      "category": "streaming",
       "color": "#113ccf",
       "pkg": "linux-brave",
       "requires": ["drm_browser"],
@@ -46,7 +55,8 @@
     {
       "id": "primevideo",
       "name": "Prime Video",
-      "caption": "Amazon Prime Video",
+      "caption": {"en": "Amazon Prime Video", "cs": "Amazon Prime Video"},
+      "category": "streaming",
       "color": "#00a8e1",
       "pkg": "linux-brave",
       "requires": ["drm_browser"],
@@ -55,7 +65,8 @@
     {
       "id": "max",
       "name": "Max",
-      "caption": "HBO and more",
+      "caption": {"en": "HBO and more", "cs": "HBO a další"},
+      "category": "streaming",
       "color": "#002be7",
       "pkg": "linux-brave",
       "requires": ["drm_browser"],
@@ -64,7 +75,8 @@
     {
       "id": "spotify",
       "name": "Spotify",
-      "caption": "Music and podcasts",
+      "caption": {"en": "Music and podcasts", "cs": "Hudba a podcasty"},
+      "category": "streaming",
       "color": "#1db954",
       "pkg": "linux-brave",
       "requires": ["drm_browser"],
@@ -73,15 +85,18 @@
     {
       "id": "browser",
       "name": "Web",
-      "caption": "Firefox",
+      "caption": {"en": "Firefox", "cs": "Firefox"},
+      "tagline": {"en": "The whole web on the big screen", "cs": "Celý web na velké obrazovce"},
       "color": "#ff7a18",
       "pkg": "firefox",
       "exec": ["firefox", "--kiosk", "--profile", "{firefox_profile}", "https://duckduckgo.com"]
     },
     {
       "id": "iptv",
-      "name": "Live TV",
-      "caption": "IPTV playlist in mpv",
+      "name": {"en": "Live TV", "cs": "Živá TV"},
+      "caption": {"en": "IPTV playlist in mpv", "cs": "IPTV playlist v mpv"},
+      "tagline": {"en": "Live channels from your IPTV playlist", "cs": "Živé kanály z vašeho IPTV playlistu"},
+      "category": "media",
       "color": "#1fbf75",
       "pkg": "mpv",
       "requires": ["iptv_playlist"],
@@ -90,7 +105,9 @@
     {
       "id": "moonlight",
       "name": "Moonlight",
-      "caption": "Stream games from your PC",
+      "caption": {"en": "Stream games from your PC", "cs": "Hry streamované z vašeho PC"},
+      "tagline": {"en": "Play PC games on the sofa", "cs": "Hrajte hry z PC na gauči"},
+      "category": "games",
       "color": "#3d63dd",
       "pkg": "moonlight-qt",
       "exec": ["moonlight"]
@@ -98,15 +115,17 @@
     {
       "id": "retroarch",
       "name": "RetroArch",
-      "caption": "Retro games",
+      "caption": {"en": "Retro games", "cs": "Retro hry"},
+      "category": "games",
       "color": "#5c5c5c",
       "pkg": "retroarch",
       "exec": ["retroarch", "--fullscreen"]
     },
     {
       "id": "music",
-      "name": "Music",
-      "caption": "Local music library",
+      "name": {"en": "Music", "cs": "Hudba"},
+      "caption": {"en": "Local music library", "cs": "Místní hudební knihovna"},
+      "category": "media",
       "color": "#e8457c",
       "pkg": "mpv",
       "requires": ["music_dir"],

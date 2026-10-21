@@ -1,10 +1,19 @@
 """The QML-facing backend: app models, settings, theme and the remote controller."""
 
-from PySide6.QtCore import (QAbstractListModel, QByteArray, QCoreApplication, QModelIndex, QObject,
-                            Property, QTimer, Qt, Signal, Slot)
+from PySide6.QtCore import (QAbstractListModel, QByteArray, QCoreApplication, QLocale, QModelIndex,
+                            QObject, Property, QTimer, Qt, Signal, Slot)
 
 from . import __version__, apps, config, remote, system
 from .runner import AppRunner
+
+
+LANGUAGES = ("en", "cs")
+
+
+def resolve_language(setting):
+    """"auto" follows the system locale; anything we have no translation for falls back to English."""
+    lang = setting if setting and setting != "auto" else QLocale.system().name().split("_")[0]
+    return lang if lang in LANGUAGES else "en"
 
 
 class AppModel(QAbstractListModel):
@@ -94,6 +103,7 @@ class Backend(QObject):
     runningAppChanged = Signal()
     infoChanged = Signal()
     raiseRequested = Signal()
+    languageChanged = Signal(str)
     message = Signal(str)
 
     def __init__(self, parent=None):
@@ -103,7 +113,11 @@ class Backend(QObject):
         self.runner.failed.connect(lambda app_id, err: self.message.emit(f"{app_id}: {err}"))
         self._apps_model = AppModel(self)
         self._dock_model = AppModel(self)
+        self._all_model = AppModel(self)
         self.app_list = []
+        self._rows = []
+        self._featured = []
+        self._lang = ""
         self._config = {}
         self._theme = {}
         self._ip = ""
@@ -158,6 +172,10 @@ class Backend(QObject):
     def dockModel(self):
         return self._dock_model
 
+    @Property(QObject, constant=True)
+    def allAppsModel(self):
+        return self._all_model
+
     @Property("QVariantMap", notify=settingsChanged)
     def settings(self):
         return self._config
@@ -191,6 +209,18 @@ class Backend(QObject):
             return ""
         return f"http://{self._ip}:{opts.get('port', 8765)}/?t={self.token}"
 
+    @Property("QVariantList", notify=settingsChanged)
+    def rows(self):
+        return self._rows
+
+    @Property("QVariantList", notify=settingsChanged)
+    def featured(self):
+        return self._featured
+
+    @Property(str, notify=settingsChanged)
+    def language(self):
+        return self._lang
+
     @Property(str, constant=True)
     def version(self):
         return __version__
@@ -201,13 +231,20 @@ class Backend(QObject):
     def reload(self):
         self._config = config.load_config()
         self._theme = config.load_theme(self._config.get("theme", "midnight"))
-        self.app_list = apps.load_apps(self._config)
+        lang = resolve_language(self._config.get("language"))
+        self.app_list = apps.load_apps(self._config, lang=lang)
+        self._rows = apps.home_rows(self.app_list, self._config.get("dock", []))
+        self._featured = apps.featured(self.app_list, self._config)
         dock = apps.order_dock(self.app_list, self._config.get("dock", []))
         dock_ids = {a.id for a in dock}
         self._dock_model.set_apps(dock)
+        self._all_model.set_apps(self.app_list)
         self._apps_model.set_apps([a for a in self.app_list if a.id not in dock_ids])
         self.settingsChanged.emit()
         self.themeChanged.emit()
+        if lang != self._lang:
+            self._lang = lang
+            self.languageChanged.emit(lang)
 
     @Slot(str)
     def launch(self, app_id):

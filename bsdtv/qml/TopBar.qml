@@ -44,7 +44,8 @@ FocusScope {
         Text {
             color: bar.theme.subtext
             font.pixelSize: bar.unit * 0.024
-            text: bar.now.toLocaleDateString(Qt.locale(), "dddd d MMMM")
+            //: Date format for the clock, see QDate::toString().
+            text: bar.now.toLocaleDateString(Qt.locale(), qsTr("dddd d MMMM"))
         }
     }
 

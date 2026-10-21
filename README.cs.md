@@ -10,7 +10,7 @@ placené „doporučené" řádky.
 
 [English](README.md)
 
-![Domovská obrazovka](docs/img/home.png)
+![Domovská obrazovka](docs/img/tv-home-cs.png)
 
 Inspirováno projektem [CleanYourTV](https://github.com/Gathin23/cleanyourtv),
 který čistí Android TV od bloatwaru. BSDTV jde opačnou cestou: místo čištění
@@ -19,9 +19,12 @@ nic zbytečného není.
 
 ## Co dostanete
 
-- **Domovská obrazovka**: velké hodiny, dok se čtyřmi oblíbenými aplikacemi,
-  mřížka všech aplikací o jedno ↓ níž, barevná záře podle vybrané aplikace.
-  Ovládání šipkami, OK, Zpět a Domů. Čtyři barevné motivy.
+- **Domovská obrazovka jako u dnešních chytrých TV** (Google TV apod.):
+  záložky „Pro vás" a „Aplikace", velký rotující banner s doporučenými
+  aplikacemi a pod ním řady: vaše aplikace, streamování, filmy a hudba, hry.
+  Ovládání šipkami, OK, Zpět a Domů. Čtyři barevné motivy. Jednodušší
+  „klasická" obrazovka (hodiny, dok a mřížka) se zapne v Nastavení.
+- **Čeština a angličtina**, podle jazyka systému nebo volby v Nastavení.
 - **Aplikace**: Kodi, YouTube (TV rozhraní, s uBlock Origin), Jellyfin,
   prohlížeč, IPTV a hudba v mpv, Moonlight (streamování her), RetroArch.
   Zobrazí se jen nainstalované; vlastní aplikace přidáte jedním záznamem v JSON.
@@ -40,6 +43,10 @@ nic zbytečného není.
   2 s v boot menu, tichý start.
 - **Vratné**: každá změna se zapisuje do `/var/db/bsdtv`, `uninstall.sh`
   vrátí systém do původního stavu.
+
+| Řady | Aplikace | Klasická obrazovka |
+| --- | --- | --- |
+| ![Řady](docs/img/tv-rows-cs.png) | ![Aplikace](docs/img/tv-apps-cs.png) | ![Klasická](docs/img/home.png) |
 
 ## Instalace
 
@@ -101,7 +108,7 @@ nebo Widevine může rozbít. Když Brave nenaběhne, zkuste v `~tv/.xinitrc`
 | Menu | nastavení | předá se aplikaci |
 | Hlasitost | hlasitost (`mixer`) | hlasitost |
 
-Ovladač v mobilu: na TV otevřete **Settings** a adresu odtud zadejte v mobilu
+Ovladač v mobilu: na TV otevřete **Nastavení** a adresu odtud zadejte v mobilu
 ve stejné síti. Část `?t=` je párovací kód.
 
 Z příkazové řádky (jako uživatel `tv` nebo přes SSH):
@@ -121,7 +128,7 @@ bsdtv-ctl url
 - `/usr/local/etc/bsdtv/config.json`: systémové výchozí hodnoty (dok, motiv,
   adresa Jellyfinu, IPTV playlist, složka s hudbou, CEC, port ovladače).
 - `~tv/.config/bsdtv/config.json`: uživatelské změny; sem zapisuje panel
-  Settings.
+  Nastavení.
 - `apps.json`: katalog aplikací, `themes/<název>/theme.json`: motivy.
 
 Všechny volby, přidání aplikace a tvorbu motivů popisuje

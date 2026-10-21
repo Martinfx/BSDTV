@@ -14,6 +14,12 @@ is replaced. After editing by hand, run `bsdtv-ctl reload`.
 ```json
 {
   "theme": "midnight",
+  "layout": "tv",
+  "language": "auto",
+  "featured": [
+    {"app": "jellyfin", "title": "Movie night", "tagline": "New on your server", "image": "/home/tv/banner.jpg"},
+    {"app": "youtube"}
+  ],
   "dock": ["kodi", "youtube", "jellyfin", "browser"],
   "hidden": [],
   "columns": 5,
@@ -39,7 +45,10 @@ is replaced. After editing by hand, run `bsdtv-ctl reload`.
 | Key | Meaning |
 | --- | --- |
 | `theme` | folder name under `themes/` |
-| `dock` | app ids shown in the top row, in order |
+| `layout` | `tv`: tabs, banner and rows (default); `classic`: clock, dock and grid |
+| `language` | `auto` (system language), `cs` or `en` |
+| `featured` | banner slides: `app` plus optional `title`, `tagline`, `image`, `color`; empty = the `dock` apps |
+| `dock` | favourite apps: first in "Your apps" (and the dock in the classic layout) |
 | `hidden` | app ids never shown |
 | `columns` | tiles per row, 3 to 7 |
 | `reduced_motion` | no animations |
@@ -81,7 +90,9 @@ entry with the same `id` as a built-in app replaces it.
 | Field | Meaning |
 | --- | --- |
 | `id` | unique id, used by `dock`, `hidden` and `bsdtv-ctl launch` |
-| `name`, `caption` | text on the tile and above the dock |
+| `name`, `caption` | text on the tile and above the dock; a string or `{"en": "...", "cs": "..."}` |
+| `tagline` | banner text (falls back to `caption`); can be translated like `caption` |
+| `category` | `streaming`, `media` or `games`: puts the app in that row on the home screen |
 | `color` | tile colour and ambient glow |
 | `icon` | optional image path (absolute, or a URL) shown instead of the name |
 | `exec` | program and arguments; `{name}` is replaced from `vars`, `~` is expanded |
@@ -139,3 +150,17 @@ With `--adblock`, `bsdtv-adblock-update` turns the lists in
 `/var/unbound/conf.d/bsdtv-adblock.conf` every Sunday. Domains in
 `adblock-allow.txt` are never blocked. Point your router's DHCP DNS setting at
 the TV box to protect every device at home.
+
+## Translations
+
+UI strings live in `bsdtv/i18n/bsdtv_<lang>.ts`. After changing QML text:
+
+```sh
+pyside6-lupdate bsdtv/qml/*.qml -ts bsdtv/i18n/bsdtv_cs.ts -no-obsolete
+# translate the new entries (Qt Linguist or a text editor), then:
+pyside6-lrelease bsdtv/i18n/bsdtv_cs.ts -qm bsdtv/i18n/bsdtv_cs.qm
+```
+
+To add a language, create `bsdtv_<lang>.ts` the same way and add the code to
+`LANGUAGES` in `bsdtv/backend.py` and to the language list in
+`SettingsPanel.qml`.

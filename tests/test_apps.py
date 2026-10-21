@@ -81,3 +81,28 @@ def test_placeholder_program_is_looked_up_after_expansion():
     app = apps.App(id="x", name="X", exec=["{prog}"])
     assert apps.is_installed(app, {"prog": "mpv"}, which=fake_which("mpv"))
     assert not apps.is_installed(app, {"prog": "nope"}, which=fake_which("mpv"))
+
+
+def test_captions_are_localized():
+    cfg = config.load_config()
+    cs = {a.id: a for a in apps.load_apps(cfg, which=fake_which("kodi"), lang="cs")}
+    en = {a.id: a for a in apps.load_apps(cfg, which=fake_which("kodi"), lang="xx")}
+    assert cs["kodi"].caption == "Filmy, seriály, hudba a živá TV"
+    assert en["kodi"].caption == "Movies, series, music and live TV"
+
+
+def test_home_rows_put_favourites_first_and_group_categories():
+    cfg = config.load_config()
+    found = apps.load_apps(cfg, which=fake_which("kodi", "firefox", "moonlight"))
+    rows = apps.home_rows(found, ["youtube", "kodi"])
+    assert [r["key"] for r in rows] == ["your_apps", "streaming", "media", "games"]
+    assert [a["appId"] for a in rows[0]["apps"]][:2] == ["youtube", "kodi"]
+    assert [a["appId"] for a in rows[3]["apps"]] == ["moonlight"]
+
+
+def test_featured_uses_config_entries_or_dock():
+    found = apps.parse_apps({"apps": [{"id": i, "name": i.title(), "exec": [i]} for i in ("a", "b", "c")]})
+    assert [s["appId"] for s in apps.featured(found, {"dock": ["c", "a"]})] == ["c", "a"]
+    slides = apps.featured(found, {"featured": [{"app": "b", "title": "Movie night", "image": "/x.jpg"},
+                                                {"app": "missing"}]})
+    assert slides == [dict(found[1].as_dict(), name="Movie night", image="/x.jpg")]

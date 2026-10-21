@@ -14,13 +14,30 @@ ApplicationWindow {
     title: "BSDTV"
     color: TV.theme.background
 
-    HomeScreen {
+    Loader {
         id: home
         objectName: "home"
         anchors.fill: parent
         focus: true
-        onSettingsRequested: overlay.show(settingsComponent)
-        onPowerRequested: overlay.show(powerComponent)
+        sourceComponent: TV.settings.layout === "classic" ? classicComponent : tvComponent
+    }
+
+    Component {
+        id: tvComponent
+        TvHome {
+            focus: true
+            onSettingsRequested: overlay.show(settingsComponent)
+            onPowerRequested: overlay.show(powerComponent)
+        }
+    }
+
+    Component {
+        id: classicComponent
+        HomeScreen {
+            focus: true
+            onSettingsRequested: overlay.show(settingsComponent)
+            onPowerRequested: overlay.show(powerComponent)
+        }
     }
 
     Loader {

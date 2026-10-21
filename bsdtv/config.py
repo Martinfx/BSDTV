@@ -15,6 +15,9 @@ SOURCE_ROOT = PACKAGE_DIR.parent
 
 DEFAULTS = {
     "theme": "midnight",
+    "layout": "tv",
+    "language": "auto",
+    "featured": [],
     "dock": ["kodi", "youtube", "jellyfin", "browser"],
     "hidden": [],
     "columns": 5,

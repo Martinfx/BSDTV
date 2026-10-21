@@ -11,6 +11,8 @@ QtGui = pytest.importorskip("PySide6.QtGui")
 from PySide6.QtCore import Qt, qInstallMessageHandler  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
 
+INSTALLED = ("kodi", "firefox", "moonlight")
+
 
 @pytest.fixture(scope="module")
 def qapp():
@@ -31,9 +33,10 @@ def ui(qapp):
 
     real_load = apps.load_apps
     monkeypatch.setattr(apps, "load_apps",
-                        lambda cfg: real_load(cfg, which=lambda n: f"/bin/{n}" if n in ("kodi", "firefox") else None))
+                        lambda cfg, lang="en": real_load(cfg, lang=lang,
+                                                         which=lambda n: f"/bin/{n}" if n in INSTALLED else None))
     started = []
-    monkeypatch.setattr("bsdtv.runner.AppRunner.start", lambda self, app_id, argv: started.append(argv))
+    monkeypatch.setattr("bsdtv.runner.AppRunner.start", lambda self, app_id, argv: started.append(app_id))
 
     messages = []
     qInstallMessageHandler(lambda mode, ctx, msg: messages.append(msg))
@@ -52,40 +55,76 @@ def ui(qapp):
     monkeypatch.undo()
 
 
-def focused_name(window):
+def focused(window):
     item = window.activeFocusItem()
-    return item.property("name") or item.property("label") or item.property("text")
+    data = item.property("modelData")
+    if data:
+        return data["name"]
+    for prop in ("name", "label", "text"):
+        if item.property(prop):
+            return item.property(prop)
+    return item.metaObject().className()
 
 
-def test_home_screen_loads_without_warnings(ui):
-    window, _, _, messages = ui
-    assert focused_name(window) == "Kodi"
+def press(window, *keys):
+    for key in keys:
+        QTest.keyClick(window, key)
+    QTest.qWait(50)
+
+
+def test_tv_home_loads_without_warnings(ui):
+    window, backend, _, messages = ui
+    assert backend.settings["layout"] == "tv"
+    assert "HeroBanner" in focused(window)
     assert [m for m in messages if "qml" in m.lower()] == []
 
 
-def shelf_title(window):
-    from PySide6.QtQuick import QQuickItem
-    return window.findChild(QQuickItem, "home").property("focusedName")
-
-
-def test_arrow_keys_and_launch(ui):
+def test_banner_rows_and_launch(ui):
     window, _, started, _ = ui
-    QTest.keyClick(window, Qt.Key_Right)
-    assert focused_name(window) == "YouTube"
-    assert shelf_title(window) == "YouTube"
-    QTest.keyClick(window, Qt.Key_Return)
-    assert started and started[0][0] == "firefox"
+    press(window, Qt.Key_Return)
+    assert started == ["kodi"]  # first featured slide
+
+    press(window, Qt.Key_Down, Qt.Key_Right)
+    assert focused(window) == "YouTube"  # "Your apps" row
+    press(window, Qt.Key_Down)
+    assert focused(window) == "YouTube"  # "Streaming" row
+    press(window, Qt.Key_Down, Qt.Key_Down)
+    assert focused(window) == "Moonlight"  # "Movies & music" then "Games"
+    press(window, Qt.Key_Return)
+    assert started[-1] == "moonlight"
 
 
-def test_settings_change_theme_and_close(ui):
+def test_back_goes_to_tabs_and_apps_tab(ui):
+    window, _, started, _ = ui
+    press(window, Qt.Key_Escape)
+    assert focused(window) == "For you"
+    press(window, Qt.Key_Right, Qt.Key_Down)
+    assert focused(window) == "Kodi"  # Apps tab grid
+    press(window, Qt.Key_Right, Qt.Key_Return)
+    assert started[-1] == "youtube"
+
+
+def test_settings_switch_to_classic_layout(ui):
     window, backend, _, _ = ui
-    QTest.keyClick(window, Qt.Key_Up)
-    assert focused_name(window) == "Settings"
-    QTest.keyClick(window, Qt.Key_Return)
-    QTest.qWait(50)
-    assert focused_name(window) == "Theme"
-    before = backend.settings["theme"]
-    QTest.keyClick(window, Qt.Key_Right)
-    assert backend.settings["theme"] != before
-    QTest.keyClick(window, Qt.Key_Escape)
-    assert focused_name(window) == "Settings"
+    press(window, Qt.Key_Escape, Qt.Key_Right, Qt.Key_Return)
+    assert focused(window) == "Theme"
+    press(window, Qt.Key_Down)
+    assert focused(window) == "Home screen"
+    press(window, Qt.Key_Right)
+    assert backend.settings["layout"] == "classic"
+    press(window, Qt.Key_Escape)
+    from PySide6.QtQuick import QQuickItem
+    home = window.findChild(QQuickItem, "home").property("item")
+    assert home.metaObject().className().startswith("HomeScreen")
+
+
+def test_classic_layout_navigation(ui):
+    window, _, started, _ = ui
+    from PySide6.QtQuick import QQuickItem
+    home = window.findChild(QQuickItem, "home").property("item")
+    assert focused(window) == "Kodi"  # the classic home starts on the dock
+    press(window, Qt.Key_Right)
+    assert focused(window) == "YouTube"
+    assert home.property("focusedName") == "YouTube"
+    press(window, Qt.Key_Return)
+    assert started[-1] == "youtube"

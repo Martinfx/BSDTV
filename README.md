@@ -9,7 +9,7 @@ blocking. No accounts, no telemetry, no content rows paid for by someone else.
 
 [Česky](README.cs.md)
 
-![Home screen](docs/img/home.png)
+![Home screen](docs/img/tv-home.png)
 
 Inspired by [CleanYourTV](https://github.com/Gathin23/cleanyourtv), which
 debloats Android TVs. BSDTV takes the other route: instead of cleaning up a
@@ -18,9 +18,12 @@ nothing to remove in the first place.
 
 ## What you get
 
-- **Home screen**: big clock and greeting, a dock of four favourite apps, the
-  full app grid one press of ↓ away, an ambient glow taken from the focused app.
-  Made for a remote: arrows, OK, Back, Home. Four themes.
+- **Home screen in the style of today's smart TVs** (Google TV and the like):
+  "For you" and "Apps" tabs, a large rotating banner of featured apps, and rows
+  below it: your apps, streaming, movies & music, games. Made for a remote:
+  arrows, OK, Back, Home. Four themes. A simpler "classic" home (clock, dock
+  and grid) is one switch away in Settings.
+- **English and Czech**, following the system language or chosen in Settings.
 - **Apps**: Kodi, YouTube (the TV interface, with uBlock Origin), Jellyfin, a
   web browser, IPTV and a music folder in mpv, Moonlight game streaming,
   RetroArch. Only installed apps are shown; adding your own is a JSON entry.
@@ -40,9 +43,9 @@ nothing to remove in the first place.
 - **Reversible**: every change is recorded in `/var/db/bsdtv`;
   `uninstall.sh` puts the system back.
 
-| Apps | Settings | Power |
+| Rows | Apps tab | Classic home |
 | --- | --- | --- |
-| ![Apps](docs/img/apps.png) | ![Settings](docs/img/settings.png) | ![Power](docs/img/power.png) |
+| ![Rows](docs/img/tv-rows.png) | ![Apps](docs/img/tv-apps.png) | ![Classic](docs/img/home.png) |
 
 ## Install
 
@@ -82,7 +85,7 @@ shell access (Claude Code, Codex, Gemini CLI). Enable SSH on the box, then paste
 | Remote / keyboard | Home screen | In an app |
 | --- | --- | --- |
 | Arrows, OK (Enter) | move, open | passed to the app |
-| Back (Esc) | leave the grid, close panels | passed to the app |
+| Back (Esc) | back to the tabs, close panels | passed to the app |
 | Home (`XF86HomePage`, `F12`, `Super+H`) | – | close the app, back home |
 | Menu | settings | passed to the app |
 | Volume keys | volume (via `mixer`) | volume |
@@ -162,8 +165,8 @@ an empty grid until you install e.g. `mpv` or `firefox`.
 BSDTV is young. Ideas for what comes next:
 
 - prebuilt USB image (poudriere / `release(7)`), so no FreeBSD install is needed
-- translations (the UI strings are ready for `qsTr`)
-- app icons and a "continue watching" row from Kodi/Jellyfin
+- more translations (`bsdtv/i18n/`, made with `pyside6-lupdate` / `lrelease`)
+- app icons, and "continue watching" rows and banner artwork from Kodi/Jellyfin
 - Wayland session (cage or labwc) once FreeBSD's Wayland apps are mature enough
 - Bluetooth remotes and game controllers out of the box
 
