@@ -2,7 +2,7 @@
 
 BSDTV reads, in order (later wins):
 
-1. built-in defaults (`bsdtv/config.py`)
+1. built-in defaults (`src/config.cpp`)
 2. `/usr/local/etc/bsdtv/config.json`
 3. `~tv/.config/bsdtv/config.json` (the Settings panel writes here)
 
@@ -211,14 +211,14 @@ the TV box to protect every device at home.
 
 ## Translations
 
-UI strings live in `bsdtv/i18n/bsdtv_<lang>.ts`. After changing QML text:
+UI strings live in `i18n/bsdtv_<lang>.ts`; the build compiles them into the
+binary. After changing QML text:
 
 ```sh
-pyside6-lupdate bsdtv/qml/*.qml -ts bsdtv/i18n/bsdtv_cs.ts -no-obsolete
-# translate the new entries (Qt Linguist or a text editor), then:
-pyside6-lrelease bsdtv/i18n/bsdtv_cs.ts -qm bsdtv/i18n/bsdtv_cs.qm
+cmake --build build --target update_translations
+# translate the new entries in Qt Linguist (or a text editor), then rebuild
 ```
 
-To add a language, create `bsdtv_<lang>.ts` the same way and add the code to
-`LANGUAGES` in `bsdtv/backend.py` and to the language list in
-`SettingsPanel.qml`.
+To add a language, add `i18n/bsdtv_<lang>.ts` to `TS_FILES` in
+`CMakeLists.txt`, the code to `languages` in `src/backend.cpp` and to the
+language list in `qml/SettingsPanel.qml`.

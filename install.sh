@@ -12,7 +12,6 @@ set -eu
 VERSION=0.1.0
 SRC=$(cd "$(dirname "$0")" && pwd)
 PREFIX=/usr/local
-SHARE=$PREFIX/share/bsdtv
 ETC=$PREFIX/etc/bsdtv
 STATE=${BSDTV_STATE:-/var/db/bsdtv}
 
@@ -134,6 +133,20 @@ pkg_add() {
 	done
 }
 
+# Install the first of several package names that exists (names change between releases).
+pkg_add_any() {
+	for p in "$@"; do
+		if pkg info -e "$p" 2>/dev/null; then
+			return 0
+		fi
+		if run env ASSUME_ALWAYS_YES=yes pkg install -q "$p"; then
+			[ "$DRY_RUN" = yes ] || echo "$p" >> "$STATE/packages"
+			return 0
+		fi
+	done
+	die "could not install any of: $*"
+}
+
 detect_gpu() {
 	vendors=$(pciconf -l 2>/dev/null | awk '/^vgapci/ { for (i = 1; i <= NF; i++) if ($i ~ /^vendor=/) print substr($i, 8) }')
 	case $vendors in
@@ -183,9 +196,10 @@ say "Installing packages"
 if [ "$DRY_RUN" = no ] && ! pkg -N >/dev/null 2>&1; then
 	run env ASSUME_ALWAYS_YES=yes pkg bootstrap -f
 fi
-pkg_add required python3 xorg-minimal xinit xauth xset xsetroot xdotool openbox dbus doas
-PY=$(python3 -c 'import sys; print("py%d%d" % sys.version_info[:2])' 2>/dev/null || echo py311)
-pkg_add required "$PY-pyside6"
+pkg_add required xorg-minimal xinit xauth xset xsetroot xdotool openbox dbus doas
+# BSDTV is C++/QML: Qt 6 to run, plus the tools to build it.
+pkg_add required qt6-base qt6-declarative qt6-tools ninja
+command -v cmake >/dev/null 2>&1 || pkg_add_any cmake-core cmake
 pkg_add optional unclutter-xfixes noto-basic libcec
 # shellcheck disable=SC2086 # APPS is a word list on purpose
 pkg_add optional $APPS
@@ -233,14 +247,17 @@ TV_HOME=${TV_HOME:-/home/$TV_USER}
 
 # --- BSDTV files -------------------------------------------------------------
 
-say "Installing BSDTV to $SHARE"
-run rm -rf "$SHARE"
-run mkdir -p "$SHARE" "$ETC/themes"
-run cp -R "$SRC/bsdtv" "$SRC/system" "$SHARE/"
-run find "$SHARE" -name __pycache__ -type d -prune -exec rm -rf {} +
-for theme in "$SRC"/themes/*/; do
-	run cp -R "${theme%/}" "$ETC/themes/"
-done
+say "Building BSDTV"
+BUILD=$STATE/build
+run cmake -S "$SRC" -B "$BUILD" -G Ninja -DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX="$PREFIX" -DBSDTV_BUILD_TESTS=OFF
+run cmake --build "$BUILD"
+say "Installing BSDTV to $PREFIX"
+run cmake --install "$BUILD"
+# Remember what was installed, for uninstall.sh.
+[ "$DRY_RUN" = yes ] || cp "$BUILD/install_manifest.txt" "$STATE/installed-files"
+
+run mkdir -p "$ETC"
 for f in config.json apps.json adblock-lists.txt adblock-allow.txt; do
 	run install -m 0644 "$SRC/etc/$f" "$ETC/$f.sample"
 	if [ -e "$ETC/$f" ]; then
@@ -249,22 +266,6 @@ for f in config.json apps.json adblock-lists.txt adblock-allow.txt; do
 		run install -m 0644 "$SRC/etc/$f" "$ETC/$f"
 	fi
 done
-
-for cmd in bsdtv bsdtv-ctl bsdtv-cec; do
-	case $cmd in
-	bsdtv) args='' ;;
-	bsdtv-ctl) args='ctl ' ;;
-	bsdtv-cec) args='cec ' ;;
-	esac
-	track_file "$PREFIX/bin/$cmd"
-	echo "  + write $PREFIX/bin/$cmd"
-	if [ "$DRY_RUN" = no ]; then
-		printf '#!/bin/sh\nPYTHONPATH=%s exec python3 -m bsdtv %s"$@"\n' "$SHARE" "$args" > "$PREFIX/bin/$cmd"
-		chmod 0755 "$PREFIX/bin/$cmd"
-	fi
-done
-put 0755 "$SRC/system/bsdtv-session" "$PREFIX/bin/bsdtv-session"
-put 0755 "$SRC/tools/adblock-update.sh" "$PREFIX/sbin/bsdtv-adblock-update"
 
 # --- session -----------------------------------------------------------------
 
@@ -353,19 +354,9 @@ if [ "$DRM" = yes ]; then
 		warn "  git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports"
 		warn "  make -C /usr/ports/www/linux-widevine-cdm install clean"
 	fi
-	put 0755 "$SRC/system/bsdtv-drm-browser" "$PREFIX/bin/bsdtv-drm-browser"
 	if [ "$DRY_RUN" = yes ] || [ -x "$PREFIX/bin/brave-browser" ]; then
 		echo "  + enable streaming tiles in $ETC/config.json"
-		[ "$DRY_RUN" = yes ] || python3 - "$ETC/config.json" "$PREFIX/bin/bsdtv-drm-browser" <<'PY'
-import json, sys
-path, browser = sys.argv[1], sys.argv[2]
-with open(path, encoding="utf-8") as fh:
-    data = json.load(fh)
-data.setdefault("vars", {})["drm_browser"] = browser
-with open(path, "w", encoding="utf-8") as fh:
-    json.dump(data, fh, indent=2)
-    fh.write("\n")
-PY
+		run "$PREFIX/bin/bsdtv" config-set "$ETC/config.json" vars.drm_browser "$PREFIX/bin/bsdtv-drm-browser"
 	else
 		warn "linux-brave did not install, streaming tiles stay hidden"
 	fi

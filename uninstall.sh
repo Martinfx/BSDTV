@@ -80,6 +80,11 @@ if [ -f "$STATE/created" ]; then
 fi
 
 say "Removing BSDTV"
+if [ -f "$STATE/installed-files" ]; then
+	while read -r f; do
+		run rm -f "$f"
+	done < "$STATE/installed-files"
+fi
 run rm -rf "$PREFIX/share/bsdtv"
 echo "  = keeping $PREFIX/etc/bsdtv (your settings); delete it by hand if you want"
 

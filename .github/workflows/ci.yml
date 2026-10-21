@@ -5,22 +5,24 @@ on:
   pull_request:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
         with:
-          python-version: "3.11"
-      - name: Install system libraries for Qt
-        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 shellcheck
-      - name: Install Python dependencies
-        run: pip install PySide6-Essentials pytest
+          version: "6.8.3"
+          cache: true
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libgl-dev libegl-dev libxkbcommon-dev shellcheck
       - name: Shellcheck
-        run: shellcheck -s sh install.sh uninstall.sh tools/adblock-update.sh system/bsdtv-session system/bsdtv-drm-browser system/xinitrc system/profile.snippet
+        run: shellcheck -s sh install.sh uninstall.sh scripts/* tools/adblock-update.sh system/bsdtv-session system/bsdtv-drm-browser system/xinitrc system/profile.snippet
       - name: Installer dry run
         run: sh install.sh --dry-run --adblock --ssh --drm --audio-unit 1
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
       - name: Tests
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: pytest -q
+        run: ctest --test-dir build --output-on-failure

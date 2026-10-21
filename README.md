@@ -73,7 +73,8 @@ sh install.sh            # add --adblock, --ssh, --apps "kodi firefox mpv moonli
 shutdown -r now
 ```
 
-The installer asks once before it changes anything. Run `sh install.sh --dry-run`
+The installer asks once before it changes anything, then installs the packages
+and compiles BSDTV (a few minutes on a mini PC). Run `sh install.sh --dry-run`
 first if you want to see every step.
 
 | Option | Meaning |
@@ -142,28 +143,38 @@ themes.
 
 ```
  FreeBSD boot ─▶ getty autologin (ttyv0) ─▶ startx ─▶ openbox (invisible WM)
-                                                   └▶ bsdtv-session ─▶ bsdtv launcher (PySide6 + QML)
+                                                   └▶ bsdtv-session ─▶ bsdtv launcher (Qt 6: C++ + QML)
                                                                          ├─ starts apps in their own process group
                                                                          ├─ HTTP API + phone remote on :8765
                                                                          └─ bsdtv-cec ─ libcec ─ TV remote
 ```
 
-- `bsdtv/`: the launcher (Python, PySide6/QML). `backend.py` exposes apps,
-  settings and theme to QML; `runner.py` keeps one app in the foreground;
-  `remote.py` serves the phone remote and the JSON API; `cec.py` bridges CEC.
+- `qml/`: the whole user interface (Qt Quick).
+- `src/`: the C++ side. `backend.cpp` is the `TV` singleton QML talks to (apps,
+  settings, profiles, Jellyfin rows, search, ambient mode); `apprunner.cpp`
+  keeps one app in the foreground; `remoteserver.cpp` serves the phone remote
+  and the JSON API; `jellyfin.cpp` talks to Jellyfin; `ctl.cpp` and `cec.cpp`
+  are `bsdtv-ctl` and the HDMI-CEC bridge. Everything is one binary, `bsdtv`.
+- `web/remote.html`: the phone remote page (built into the binary).
+- `i18n/`: translations.
 - `system/`: session files (xinitrc, openbox config, autologin, Firefox policies).
 - `tools/adblock-update.sh`: builds the unbound block list.
 - `install.sh` / `uninstall.sh`: setup and undo.
 
 ## Development
 
-The launcher runs on any OS with PySide6, which is handy for working on the UI:
+BSDTV builds with Qt 6.8 or newer and CMake on FreeBSD, Linux and macOS, which
+is handy for working on the UI:
 
 ```sh
-python3 -m venv .venv && .venv/bin/pip install PySide6-Essentials pytest
-.venv/bin/python -m bsdtv --windowed          # arrow keys + Enter, F12 has no effect outside openbox
-.venv/bin/python -m pytest
+cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/path/to/Qt/6.8.3/gcc_64   # if Qt is not system-wide
+cmake --build build
+./build/bsdtv --windowed          # arrow keys + Enter + Esc; F12 (Home) only works under openbox
+ctest --test-dir build            # unit tests and offscreen UI tests
 ```
+
+On FreeBSD: `pkg install qt6-base qt6-declarative qt6-tools cmake-core ninja`.
+A build run from the source tree finds `themes/` and `etc/` there.
 
 Apps only appear when their binary is on `PATH`, so on a dev machine you may see
 an empty grid until you install e.g. `mpv` or `firefox`.
@@ -188,7 +199,8 @@ an empty grid until you install e.g. `mpv` or `firefox`.
 BSDTV is young. Ideas for what comes next:
 
 - prebuilt USB image (poudriere / `release(7)`), so no FreeBSD install is needed
-- more translations (`bsdtv/i18n/`, made with `pyside6-lupdate` / `lrelease`)
+- more translations (`i18n/`, see docs/CONFIG.md)
+- a FreeBSD port, so `pkg install bsdtv` replaces building in `install.sh`
 - app icons; the same "continue watching" rows for Kodi libraries
 - playback progress sync for "Play now (mpv)" (the Jellyfin web app already syncs)
 - Wayland session (cage or labwc) once FreeBSD's Wayland apps are mature enough

@@ -160,13 +160,18 @@ Všechny volby, přidání aplikace a tvorbu motivů popisuje
 
 ## Vývoj
 
-Launcher běží všude, kde je PySide6:
+BSDTV je napsané v Qt 6 (C++ a QML) a sestavuje se CMakem na FreeBSD,
+Linuxu i macOS:
 
 ```sh
-python3 -m venv .venv && .venv/bin/pip install PySide6-Essentials pytest
-.venv/bin/python -m bsdtv --windowed
-.venv/bin/python -m pytest
+cmake -S . -B build -G Ninja      # případně -DCMAKE_PREFIX_PATH=/cesta/k/Qt/6.8.3/gcc_64
+cmake --build build
+./build/bsdtv --windowed          # šipky, Enter, Esc
+ctest --test-dir build            # testy včetně testů rozhraní bez obrazovky
 ```
+
+Na FreeBSD: `pkg install qt6-base qt6-declarative qt6-tools cmake-core ninja`.
+Instalátor `install.sh` BSDTV sestaví sám.
 
 ## Licence
 

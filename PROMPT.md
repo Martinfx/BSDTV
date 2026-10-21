@@ -34,7 +34,7 @@ Steps:
    real with `--yes`.
 4. Write my answers into `/usr/local/etc/bsdtv/config.json` (dock, vars,
    cec, jellyfin, profiles, ambient), keeping it valid JSON. Validate with
-   `python3 -m json.tool /usr/local/etc/bsdtv/config.json`.
+   `jq . /usr/local/etc/bsdtv/config.json` (install `jq` if needed).
 5. Reboot, wait for the box to come back, then check the session:
    `ps -U tv -o pid,command | grep -E 'Xorg|openbox|bsdtv'` and
    `su tv -c 'bsdtv-ctl status'`. Give me the phone remote address from
