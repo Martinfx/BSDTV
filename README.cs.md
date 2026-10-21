@@ -25,6 +25,9 @@ nic zbytečného není.
 - **Aplikace**: Kodi, YouTube (TV rozhraní, s uBlock Origin), Jellyfin,
   prohlížeč, IPTV a hudba v mpv, Moonlight (streamování her), RetroArch.
   Zobrazí se jen nainstalované; vlastní aplikace přidáte jedním záznamem v JSON.
+- **Netflix, Disney+, Prime Video, Max, Spotify** (volitelně, `--drm`):
+  přes Linuxovou verzi Brave s Widevine, běžící v linuxové kompatibilitě
+  FreeBSD. Brave Shields blokují reklamy i tam.
 - **Vždy jedna aplikace**, jako u skutečné TV: tlačítko Domů ji zavře a vrátí
   domovskou obrazovku.
 - **Ovladač v mobilu**: otevřete adresu (spárovanou kódem z TV) a máte
@@ -59,6 +62,7 @@ ukáže všechny kroky bez provedení.
 | `--apps "SEZNAM"` | balíčky aplikací (výchozí `kodi firefox mpv`) |
 | `--gpu TYP` | `auto`, `intel`, `amd`, `nvidia` nebo `generic` |
 | `--adblock` | blokování reklam v celé síti přes `local_unbound` |
+| `--drm` | streamovací služby s Widevine přes `linux-brave` (viz níže) |
 | `--ssh` | zapne sshd pro vzdálenou správu |
 | `--audio-unit N` | zvuk na `pcmN` (HDMI často není 0, viz `cat /dev/sndstat`) |
 | `--user JMÉNO` | účet, pod kterým TV běží (výchozí `tv`) |
@@ -68,6 +72,24 @@ ukáže všechny kroky bez provedení.
 Stejně jako u CleanYourTV můžete nastavení svěřit asistentovi s přístupem
 k terminálu (Claude Code, Codex, Gemini CLI). Na boxu zapněte SSH a vložte
 asistentovi obsah [PROMPT.md](PROMPT.md).
+
+### Netflix a další služby s DRM
+
+Netflix, Disney+, Prime Video, Max a Spotify hrají jen v prohlížeči s
+Widevine. Firefox na FreeBSD ho nemá, ale Linuxová verze Brave
+(`linux-brave`, běží přes Linuxulator) ho umí načíst z portu
+`www/linux-widevine-cdm`. `install.sh --drm` to nastaví: zapne linuxovou
+kompatibilitu, nainstaluje `linux-brave`, sestaví Widevine z portů a zobrazí
+dlaždice streamovacích služeb.
+
+Widevine nemá binární balíček (licence ho nedovoluje šířit), proto je předem
+potřeba strom portů: `git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports`.
+
+Omezení: jde o softwarový Widevine (L3), takže služby pustí nižší rozlišení
+(Netflix v prohlížeči obvykle max. 720p, bez 4K a HDR). Závisí na linuxových
+binárkách, které FreeBSD oficiálně nepodporuje, takže ho aktualizace Brave
+nebo Widevine může rozbít. Když Brave nenaběhne, zkuste v `~tv/.xinitrc`
+`BSDTV_BRAVE_FLAGS=--no-sandbox` (oslabí to sandbox prohlížeče).
 
 ## Ovládání
 

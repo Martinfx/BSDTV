@@ -24,6 +24,9 @@ nothing to remove in the first place.
 - **Apps**: Kodi, YouTube (the TV interface, with uBlock Origin), Jellyfin, a
   web browser, IPTV and a music folder in mpv, Moonlight game streaming,
   RetroArch. Only installed apps are shown; adding your own is a JSON entry.
+- **Netflix, Disney+, Prime Video, Max, Spotify** (optional, `--drm`): through
+  the Linux build of Brave with Widevine, running on FreeBSD's Linux
+  compatibility layer. Brave Shields block ads there too.
 - **One app at a time**, like a real TV: Home closes the running app and
   brings back the home screen.
 - **Phone remote**: open a URL on your phone (paired with a code shown on the
@@ -63,6 +66,7 @@ first if you want to see every step.
 | `--apps "LIST"` | app packages to install (default `kodi firefox mpv`) |
 | `--gpu TYPE` | `auto`, `intel`, `amd`, `nvidia` or `generic` |
 | `--adblock` | network-wide ad blocking with `local_unbound` |
+| `--drm` | streaming services that need Widevine, via `linux-brave` (see below) |
 | `--ssh` | enable sshd for remote administration |
 | `--audio-unit N` | send sound to `pcmN` (HDMI is often not unit 0, see `cat /dev/sndstat`) |
 | `--user NAME` | account that runs the TV (default `tv`) |
@@ -163,8 +167,27 @@ BSDTV is young. Ideas for what comes next:
 - Wayland session (cage or labwc) once FreeBSD's Wayland apps are mature enough
 - Bluetooth remotes and game controllers out of the box
 
-Netflix, Disney+ and other DRM services need Widevine, which has no supported
-FreeBSD build; BSDTV does not try to work around that.
+## Netflix and other DRM services
+
+Netflix, Disney+, Prime Video, Max and Spotify only play in a browser with the
+Widevine CDM. Firefox on FreeBSD has none, but the Linux build of Brave
+(`linux-brave`, running on the Linuxulator) can load it from the
+`www/linux-widevine-cdm` port. `install.sh --drm` sets this up:
+
+1. enables Linux compatibility (`linux_enable=YES`)
+2. installs `linux-brave`
+3. builds `www/linux-widevine-cdm` from the ports tree. It has no binary
+   package because Widevine may not be redistributed, so get the ports tree
+   first: `git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports`
+4. installs `bsdtv-drm-browser` (Brave in kiosk mode with its own profile) and
+   sets `vars.drm_browser`, which makes the streaming tiles appear
+
+Limits: this is software Widevine (L3), so services stream in reduced
+resolution (Netflix in a browser typically tops out at 720p, no 4K or HDR).
+It depends on Linux binaries that FreeBSD does not support officially, so a
+Brave or Widevine update can break it. If Brave will not start, try
+`BSDTV_BRAVE_FLAGS=--no-sandbox` in `~tv/.xinitrc` (this weakens Brave's
+sandbox).
 
 ## License
 

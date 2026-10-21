@@ -17,9 +17,9 @@ jobs:
       - name: Install Python dependencies
         run: pip install PySide6-Essentials pytest
       - name: Shellcheck
-        run: shellcheck -s sh install.sh uninstall.sh tools/adblock-update.sh system/bsdtv-session system/xinitrc system/profile.snippet
+        run: shellcheck -s sh install.sh uninstall.sh tools/adblock-update.sh system/bsdtv-session system/bsdtv-drm-browser system/xinitrc system/profile.snippet
       - name: Installer dry run
-        run: sh install.sh --dry-run --adblock --ssh --audio-unit 1
+        run: sh install.sh --dry-run --adblock --ssh --drm --audio-unit 1
       - name: Tests
         env:
           QT_QPA_PLATFORM: offscreen

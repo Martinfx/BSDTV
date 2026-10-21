@@ -30,7 +30,8 @@ is replaced. After editing by hand, run `bsdtv-ctl reload`.
     "music_dir": "/home/tv/Music",
     "firefox_profile": "~/.local/share/bsdtv/firefox",
     "youtube_profile": "~/.local/share/bsdtv/firefox-youtube",
-    "youtube_url": "https://www.youtube.com/tv"
+    "youtube_url": "https://www.youtube.com/tv",
+    "drm_browser": "/usr/local/bin/bsdtv-drm-browser"
   }
 }
 ```
@@ -48,6 +49,7 @@ is replaced. After editing by hand, run `bsdtv-ctl reload`.
 | `remote.bind` / `remote.port` | phone remote; `127.0.0.1` makes it local only |
 | `cec.enabled` / `cec.device` | start the HDMI-CEC bridge; empty device = autodetect |
 | `vars` | values for `{placeholders}` in `apps.json` |
+| `vars.drm_browser` | browser with Widevine for Netflix & co.; empty hides those tiles. `install.sh --drm` sets it |
 
 ## Apps
 

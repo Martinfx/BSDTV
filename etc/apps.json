@@ -26,6 +26,51 @@
       "exec": ["firefox", "--kiosk", "--profile", "{firefox_profile}", "{jellyfin_url}"]
     },
     {
+      "id": "netflix",
+      "name": "Netflix",
+      "caption": "Series and films",
+      "color": "#e50914",
+      "pkg": "linux-brave",
+      "requires": ["drm_browser"],
+      "exec": ["{drm_browser}", "https://www.netflix.com/"]
+    },
+    {
+      "id": "disneyplus",
+      "name": "Disney+",
+      "caption": "Disney, Pixar, Marvel, Star Wars",
+      "color": "#113ccf",
+      "pkg": "linux-brave",
+      "requires": ["drm_browser"],
+      "exec": ["{drm_browser}", "https://www.disneyplus.com/"]
+    },
+    {
+      "id": "primevideo",
+      "name": "Prime Video",
+      "caption": "Amazon Prime Video",
+      "color": "#00a8e1",
+      "pkg": "linux-brave",
+      "requires": ["drm_browser"],
+      "exec": ["{drm_browser}", "https://www.primevideo.com/"]
+    },
+    {
+      "id": "max",
+      "name": "Max",
+      "caption": "HBO and more",
+      "color": "#002be7",
+      "pkg": "linux-brave",
+      "requires": ["drm_browser"],
+      "exec": ["{drm_browser}", "https://play.max.com/"]
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "caption": "Music and podcasts",
+      "color": "#1db954",
+      "pkg": "linux-brave",
+      "requires": ["drm_browser"],
+      "exec": ["{drm_browser}", "https://open.spotify.com/"]
+    },
+    {
       "id": "browser",
       "name": "Web",
       "caption": "Firefox",

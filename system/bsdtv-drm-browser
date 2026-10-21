@@ -1,0 +1,24 @@
+#!/bin/sh
+# BSDTV: Brave (Linux build, runs through the Linuxulator) as a full-screen TV
+# app. Unlike Firefox on FreeBSD it can use Widevine, which Netflix, Disney+,
+# Prime Video, Max and Spotify require. Brave Shields also block ads.
+#
+# Extra flags can be added with BSDTV_BRAVE_FLAGS, e.g. "--no-sandbox" if
+# Brave refuses to start on your FreeBSD version.
+
+BRAVE=${BSDTV_BRAVE:-/usr/local/bin/brave-browser}
+PROFILE=${BSDTV_BRAVE_PROFILE:-$HOME/.local/share/bsdtv/brave}
+
+mkdir -p "$PROFILE"
+# shellcheck disable=SC2086 # BSDTV_BRAVE_FLAGS is a list of flags
+exec "$BRAVE" \
+	--user-data-dir="$PROFILE" \
+	--kiosk \
+	--no-first-run \
+	--no-default-browser-check \
+	--noerrdialogs \
+	--disable-session-crashed-bubble \
+	--password-store=basic \
+	--autoplay-policy=no-user-gesture-required \
+	${BSDTV_BRAVE_FLAGS:-} \
+	"$@"

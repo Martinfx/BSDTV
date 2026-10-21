@@ -57,10 +57,10 @@ def parse_apps(data):
 
 
 def is_installed(app, variables, which=shutil.which):
-    """An app is usable when its binary exists and every required variable is set."""
-    if not app.exec or not which(app.exec[0]):
+    """An app is usable when every required variable is set and its program exists."""
+    if not app.exec or not all(variables.get(name) for name in app.requires):
         return False
-    return all(variables.get(name) for name in app.requires)
+    return bool(which(expand(app.exec[0], variables)))
 
 
 def load_apps(cfg, which=shutil.which):

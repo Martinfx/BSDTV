@@ -20,6 +20,7 @@ TV_USER=tv
 APPS="kodi firefox mpv"
 GPU=auto
 ADBLOCK=no
+DRM=no
 SSH=keep
 AUDIO_UNIT=
 DRY_RUN=no
@@ -36,6 +37,8 @@ Usage: sh install.sh [options]
   --gpu TYPE        auto | intel | amd | nvidia | generic (default: auto)
   --user NAME       account that runs the TV session (default: $TV_USER)
   --adblock         block ads and trackers for the whole network via local_unbound
+  --drm             Netflix, Disney+, Prime Video, Max and Spotify through Brave
+                    (Linux build) with Widevine; needs the ports tree for Widevine
   --ssh             enable sshd for remote administration
   --audio-unit N    send sound to pcmN (see: cat /dev/sndstat)
   --dry-run         print what would be done, change nothing
@@ -50,6 +53,7 @@ while [ $# -gt 0 ]; do
 	--gpu) GPU=$2; shift ;;
 	--user) TV_USER=$2; shift ;;
 	--adblock) ADBLOCK=yes ;;
+	--drm) DRM=yes ;;
 	--ssh) SSH=yes ;;
 	--audio-unit) AUDIO_UNIT=$2; shift ;;
 	--dry-run) DRY_RUN=yes ;;
@@ -160,6 +164,7 @@ cat <<EOF
   Apps:        $APPS
   Graphics:    $GPU
   Ad blocking: $ADBLOCK
+  Streaming:   $DRM (Brave + Widevine)
   SSH:         $SSH
   Dry run:     $DRY_RUN
 
@@ -329,6 +334,40 @@ if [ "$ADBLOCK" = yes ]; then
 	if [ "$DRY_RUN" = no ]; then
 		mkdir -p "$PREFIX/etc/cron.d"
 		echo "17 4 * * 0 root $PREFIX/sbin/bsdtv-adblock-update >/dev/null" > "$PREFIX/etc/cron.d/bsdtv-adblock"
+	fi
+fi
+
+if [ "$DRM" = yes ]; then
+	say "Setting up Brave with Widevine for Netflix, Disney+, Prime Video, Max, Spotify"
+	set_rc /etc/rc.conf linux_enable=YES
+	run service linux start || true
+	pkg_add optional linux-brave
+	if pkg info -e linux-widevine-cdm 2>/dev/null; then
+		echo "  = linux-widevine-cdm is installed"
+	elif [ -d /usr/ports/www/linux-widevine-cdm ]; then
+		# Widevine may not be redistributed, so there is no binary package: build it from ports.
+		run env BATCH=yes make -C /usr/ports/www/linux-widevine-cdm install clean
+		[ "$DRY_RUN" = yes ] || echo linux-widevine-cdm >> "$STATE/packages"
+	else
+		warn "Widevine has no binary package (license). Fetch the ports tree and build it:"
+		warn "  git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports"
+		warn "  make -C /usr/ports/www/linux-widevine-cdm install clean"
+	fi
+	put 0755 "$SRC/system/bsdtv-drm-browser" "$PREFIX/bin/bsdtv-drm-browser"
+	if [ "$DRY_RUN" = yes ] || [ -x "$PREFIX/bin/brave-browser" ]; then
+		echo "  + enable streaming tiles in $ETC/config.json"
+		[ "$DRY_RUN" = yes ] || python3 - "$ETC/config.json" "$PREFIX/bin/bsdtv-drm-browser" <<'PY'
+import json, sys
+path, browser = sys.argv[1], sys.argv[2]
+with open(path, encoding="utf-8") as fh:
+    data = json.load(fh)
+data.setdefault("vars", {})["drm_browser"] = browser
+with open(path, "w", encoding="utf-8") as fh:
+    json.dump(data, fh, indent=2)
+    fh.write("\n")
+PY
+	else
+		warn "linux-brave did not install, streaming tiles stay hidden"
 	fi
 fi
 

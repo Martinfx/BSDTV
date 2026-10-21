@@ -64,3 +64,20 @@ def test_command_uses_youtube_profile():
 def test_order_dock_follows_config_and_skips_missing():
     items = apps.parse_apps({"apps": [{"id": i, "exec": [i]} for i in ("a", "b", "c")]})
     assert [a.id for a in apps.order_dock(items, ["c", "x", "a"])] == ["c", "a"]
+
+
+def test_streaming_apps_need_the_drm_browser():
+    cfg = config.load_config()
+    which = fake_which("bsdtv-drm-browser", "firefox")
+    assert "netflix" not in [a.id for a in apps.load_apps(cfg, which=which)]
+
+    cfg["vars"]["drm_browser"] = "/usr/local/bin/bsdtv-drm-browser"
+    found = {a.id: a for a in apps.load_apps(cfg, which=lambda p: p if p.endswith("bsdtv-drm-browser") else None)}
+    assert {"netflix", "disneyplus", "primevideo", "max", "spotify"} <= set(found)
+    assert found["netflix"].command(cfg["vars"]) == ["/usr/local/bin/bsdtv-drm-browser", "https://www.netflix.com/"]
+
+
+def test_placeholder_program_is_looked_up_after_expansion():
+    app = apps.App(id="x", name="X", exec=["{prog}"])
+    assert apps.is_installed(app, {"prog": "mpv"}, which=fake_which("mpv"))
+    assert not apps.is_installed(app, {"prog": "nope"}, which=fake_which("mpv"))

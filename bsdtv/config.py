@@ -32,6 +32,7 @@ DEFAULTS = {
         "firefox_profile": "~/.local/share/bsdtv/firefox",
         "youtube_profile": "~/.local/share/bsdtv/firefox-youtube",
         "youtube_url": "https://www.youtube.com/tv",
+        "drm_browser": "",
     },
 }
 

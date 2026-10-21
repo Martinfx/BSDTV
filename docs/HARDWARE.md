@@ -20,6 +20,13 @@ CPU speed: it is what makes 4K playback smooth and quiet.
 - **Very new GPUs**: check the `drm-kmod` version in the FreeBSD release you
   install before buying.
 
+## Netflix and other DRM services
+
+With `install.sh --drm` these run in the Linux build of Brave with software
+Widevine (L3). That means reduced resolution (Netflix in a browser usually
+tops out at 720p) and no HDR, whatever the hardware. A faster CPU helps
+because L3 decrypts in software.
+
 ## Sound over HDMI
 
 FreeBSD often makes the analog output `pcm0` and HDMI `pcm1` or later.

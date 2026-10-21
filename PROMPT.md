@@ -22,6 +22,8 @@ Steps:
      music folder, Moonlight, RetroArch, web browser)
    - which four apps go in the dock
    - whether to block ads for the whole network (`--adblock`)
+   - whether I want Netflix / Disney+ / Prime Video / Max / Spotify (`--drm`;
+     needs the ports tree for Widevine, see README)
    - whether I use a HDMI-CEC adapter
    - whether SSH should stay enabled afterwards
 3. Clone the repository on the box, run `sh install.sh --dry-run` with the
