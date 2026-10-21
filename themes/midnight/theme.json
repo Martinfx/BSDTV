@@ -1,0 +1,10 @@
+{
+  "name": "Midnight",
+  "background": "#05060a",
+  "background2": "#111527",
+  "surface": "#1a1d2b",
+  "text": "#f4f5fa",
+  "subtext": "#9aa0b4",
+  "accent": "#7aa2ff",
+  "focus": "#ffffff"
+}

@@ -1,0 +1,16 @@
+#!/bin/sh
+# BSDTV X session (installed as ~tv/.xinitrc).
+
+# The TV decides when to sleep; never blank the picture during a film.
+xset s off s noblank -dpms 2>/dev/null
+xsetroot -solid black -cursor_name left_ptr 2>/dev/null
+
+# Hide the mouse pointer when it is not moving (air-mouse remotes).
+command -v unclutter >/dev/null && unclutter --timeout 3 --jitter 10 --ignore-scrolling &
+
+openbox --config-file /usr/local/share/bsdtv/system/openbox-rc.xml &
+
+# HDMI-CEC bridge; exits immediately unless "cec": {"enabled": true} is set.
+/usr/local/bin/bsdtv-cec --if-enabled &
+
+exec /usr/local/bin/bsdtv-session

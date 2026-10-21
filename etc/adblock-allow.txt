@@ -1,0 +1,3 @@
+# Domains that must never be blocked (one per line).
+# Add a domain here if an app stops working, then run: bsdtv-adblock-update
+s.youtube.com

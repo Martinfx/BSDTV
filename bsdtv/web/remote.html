@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#05060a">
+<title>BSDTV Remote</title>
+<style>
+  :root {
+    --bg: #05060a; --surface: #161927; --surface2: #222639; --text: #f4f5fa;
+    --sub: #9aa0b4; --accent: #7aa2ff; --danger: #ff5a6a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; justify-content: center; user-select: none;
+  }
+  main { width: 100%; max-width: 420px; padding: 20px 16px 40px; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: .5px; }
+  #status { color: var(--sub); font-size: 14px; }
+  button {
+    font: inherit; color: var(--text); background: var(--surface); border: 0;
+    border-radius: 16px; padding: 14px 0; cursor: pointer; touch-action: manipulation;
+  }
+  button:active { background: var(--surface2); transform: scale(.97); }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+  .pad {
+    position: relative; width: 260px; height: 260px; margin: 18px auto 22px;
+    border-radius: 50%; background: var(--surface);
+  }
+  .pad button { position: absolute; background: transparent; font-size: 26px; width: 80px; height: 80px; border-radius: 50%; }
+  .pad button:active { background: var(--surface2); }
+  .pad .up { top: 6px; left: 90px; } .pad .down { bottom: 6px; left: 90px; }
+  .pad .left { left: 6px; top: 90px; } .pad .right { right: 6px; top: 90px; }
+  .pad .ok {
+    top: 70px; left: 70px; width: 120px; height: 120px; background: var(--surface2);
+    font-size: 20px; font-weight: 600;
+  }
+  .accent { background: var(--accent); color: #05060a; font-weight: 600; }
+  .danger { color: var(--danger); }
+  h2 { font-size: 15px; color: var(--sub); font-weight: 500; margin: 26px 0 10px; }
+  #apps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  #apps button { padding: 18px 8px; font-weight: 600; }
+  form { display: flex; gap: 8px; }
+  input {
+    flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--surface);
+    border: 1px solid var(--surface2); border-radius: 14px; padding: 12px 14px;
+  }
+  form button { padding: 12px 18px; }
+  #pair { display: none; }
+  #pair p { color: var(--sub); }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>BSDTV</h1><span id="status">connecting…</span></header>
+
+  <section id="pair">
+    <p>Enter the pairing code shown in <b>Settings → Phone remote</b> on the TV (the part after <code>?t=</code>).</p>
+    <form id="pairForm"><input id="token" autocomplete="off" placeholder="Pairing code"><button class="accent">Pair</button></form>
+  </section>
+
+  <section id="remote">
+    <div class="row">
+      <button data-api="home">⌂ Home</button>
+      <button data-key="back">↩ Back</button>
+      <button data-key="menu">☰ Menu</button>
+    </div>
+
+    <div class="pad">
+      <button class="up" data-key="up" aria-label="Up">▲</button>
+      <button class="left" data-key="left" aria-label="Left">◀</button>
+      <button class="ok" data-key="ok">OK</button>
+      <button class="right" data-key="right" aria-label="Right">▶</button>
+      <button class="down" data-key="down" aria-label="Down">▼</button>
+    </div>
+
+    <div class="row">
+      <button data-key="rewind" aria-label="Rewind">⏪</button>
+      <button data-key="playpause" aria-label="Play or pause">⏯</button>
+      <button data-key="forward" aria-label="Forward">⏩</button>
+    </div>
+    <div class="row">
+      <button data-volume="down" aria-label="Volume down">🔉</button>
+      <button data-volume="mute" aria-label="Mute">🔇</button>
+      <button data-volume="up" aria-label="Volume up">🔊</button>
+    </div>
+
+    <h2>Type on the TV</h2>
+    <form id="typeForm"><input id="text" autocomplete="off" placeholder="Search…"><button class="accent">Send</button></form>
+
+    <h2>Apps</h2>
+    <div id="apps"></div>
+
+    <h2>Power</h2>
+    <div class="row">
+      <button data-power="display_off">Screen off</button>
+      <button data-power="reboot" class="danger" data-confirm="Reboot the TV?">Reboot</button>
+      <button data-power="poweroff" class="danger" data-confirm="Shut down the TV?">Off</button>
+    </div>
+  </section>
+</main>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const store = {
+    get() { try { return localStorage.getItem("bsdtv-token") || ""; } catch (e) { return ""; } },
+    set(v) { try { localStorage.setItem("bsdtv-token", v); } catch (e) {} },
+  };
+  let token = params.get("t") || store.get();
+  if (params.get("t")) { store.set(token); history.replaceState(null, "", location.pathname); }
+
+  const $ = (id) => document.getElementById(id);
+  const status = (text) => { $("status").textContent = text; };
+
+  async function api(path, body) {
+    const res = await fetch(path, {
+      method: body === undefined ? "GET" : "POST",
+      headers: { "Content-Type": "application/json", "X-BSDTV-Token": token },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    if (res.status === 403) { showPairing(); throw new Error("not paired"); }
+    return res.json();
+  }
+
+  function showPairing() {
+    $("pair").style.display = "block";
+    $("remote").style.display = "none";
+    status("not paired");
+  }
+
+  function buzz() { if (navigator.vibrate) navigator.vibrate(12); }
+
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button");
+    if (!b || b.closest("form")) return;
+    if (b.dataset.confirm && !confirm(b.dataset.confirm)) return;
+    buzz();
+    if (b.dataset.key) api("/api/key", { key: b.dataset.key }).catch(() => {});
+    else if (b.dataset.volume) api("/api/volume", { action: b.dataset.volume }).catch(() => {});
+    else if (b.dataset.power) api("/api/power", { action: b.dataset.power }).catch(() => {});
+    else if (b.dataset.api) api("/api/" + b.dataset.api, {}).catch(() => {});
+    else if (b.dataset.app) api("/api/launch", { app: b.dataset.app }).catch(() => {});
+  });
+
+  $("typeForm").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const value = $("text").value;
+    if (value) api("/api/text", { text: value }).then(() => { $("text").value = ""; }).catch(() => {});
+  });
+
+  $("pairForm").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    token = $("token").value.trim();
+    store.set(token);
+    start();
+  });
+
+  async function start() {
+    try {
+      const { apps } = await api("/api/apps");
+      $("pair").style.display = "none";
+      $("remote").style.display = "block";
+      const box = $("apps");
+      box.replaceChildren(...apps.map((a) => {
+        const b = document.createElement("button");
+        b.dataset.app = a.id;
+        b.textContent = a.name;
+        b.style.background = a.color;
+        return b;
+      }));
+      refresh();
+    } catch (e) {
+      if (e.message !== "not paired") status("offline");
+    }
+  }
+
+  async function refresh() {
+    try {
+      const s = await api("/api/status");
+      status(s.running ? "▶ " + s.running : "home screen");
+    } catch (e) { status("offline"); }
+  }
+
+  setInterval(() => { if (!document.hidden && $("remote").style.display !== "none") refresh(); }, 5000);
+  start();
+})();
+</script>
+</body>
+</html>

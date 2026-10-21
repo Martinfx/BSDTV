@@ -1,0 +1,18 @@
+{
+  "theme": "midnight",
+  "dock": ["kodi", "youtube", "jellyfin", "browser"],
+  "hidden": [],
+  "columns": 5,
+  "reduced_motion": false,
+  "show_stats": false,
+  "remote": {"enabled": true, "bind": "0.0.0.0", "port": 8765},
+  "cec": {"enabled": false, "device": ""},
+  "vars": {
+    "jellyfin_url": "",
+    "iptv_playlist": "",
+    "music_dir": "",
+    "firefox_profile": "~/.local/share/bsdtv/firefox",
+    "youtube_profile": "~/.local/share/bsdtv/firefox-youtube",
+    "youtube_url": "https://www.youtube.com/tv"
+  }
+}

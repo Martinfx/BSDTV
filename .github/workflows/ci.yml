@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install system libraries for Qt
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 shellcheck
+      - name: Install Python dependencies
+        run: pip install PySide6-Essentials pytest
+      - name: Shellcheck
+        run: shellcheck -s sh install.sh uninstall.sh tools/adblock-update.sh system/bsdtv-session system/xinitrc system/profile.snippet
+      - name: Installer dry run
+        run: sh install.sh --dry-run --adblock --ssh --audio-unit 1
+      - name: Tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q

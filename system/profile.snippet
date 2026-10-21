@@ -1,0 +1,8 @@
+# BSDTV begin
+# Start the TV session on the first console after autologin.
+if [ "$(tty)" = /dev/ttyv0 ] && [ -z "${DISPLAY:-}" ]; then
+	startx -- -nolisten tcp -keeptty >/dev/null 2>"$HOME/.local/share/bsdtv/xsession.log"
+	echo "BSDTV session ended. Restarting in 10 s - press Ctrl-C for a shell."
+	sleep 10 && exit
+fi
+# BSDTV end

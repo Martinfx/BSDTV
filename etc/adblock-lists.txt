@@ -1,0 +1,3 @@
+# Host block lists used by bsdtv-adblock-update (one URL per line).
+# Both hosts-file format (0.0.0.0 example.com) and plain domain lists work.
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts

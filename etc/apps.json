@@ -1,0 +1,71 @@
+{
+  "apps": [
+    {
+      "id": "kodi",
+      "name": "Kodi",
+      "caption": "Movies, series, music and live TV",
+      "color": "#17b2e7",
+      "pkg": "kodi",
+      "exec": ["kodi", "--standalone", "-fs"]
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "caption": "YouTube TV interface, remote friendly",
+      "color": "#ff2d2d",
+      "pkg": "firefox",
+      "exec": ["firefox", "--kiosk", "--profile", "{youtube_profile}", "{youtube_url}"]
+    },
+    {
+      "id": "jellyfin",
+      "name": "Jellyfin",
+      "caption": "Your own media server",
+      "color": "#8c4bdc",
+      "pkg": "firefox",
+      "requires": ["jellyfin_url"],
+      "exec": ["firefox", "--kiosk", "--profile", "{firefox_profile}", "{jellyfin_url}"]
+    },
+    {
+      "id": "browser",
+      "name": "Web",
+      "caption": "Firefox",
+      "color": "#ff7a18",
+      "pkg": "firefox",
+      "exec": ["firefox", "--kiosk", "--profile", "{firefox_profile}", "https://duckduckgo.com"]
+    },
+    {
+      "id": "iptv",
+      "name": "Live TV",
+      "caption": "IPTV playlist in mpv",
+      "color": "#1fbf75",
+      "pkg": "mpv",
+      "requires": ["iptv_playlist"],
+      "exec": ["mpv", "--fs", "--input-default-bindings", "--osc=yes", "{iptv_playlist}"]
+    },
+    {
+      "id": "moonlight",
+      "name": "Moonlight",
+      "caption": "Stream games from your PC",
+      "color": "#3d63dd",
+      "pkg": "moonlight-qt",
+      "exec": ["moonlight"]
+    },
+    {
+      "id": "retroarch",
+      "name": "RetroArch",
+      "caption": "Retro games",
+      "color": "#5c5c5c",
+      "pkg": "retroarch",
+      "exec": ["retroarch", "--fullscreen"]
+    },
+    {
+      "id": "music",
+      "name": "Music",
+      "caption": "Local music library",
+      "color": "#e8457c",
+      "pkg": "mpv",
+      "requires": ["music_dir"],
+      "exec": ["mpv", "--fs", "--force-window=yes", "--shuffle", "{music_dir}"]
+    }
+  ]
+}

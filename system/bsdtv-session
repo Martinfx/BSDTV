@@ -1,0 +1,21 @@
+#!/bin/sh
+# Keep the home screen running. If it crashes it comes straight back;
+# if it keeps crashing, back off so the box stays usable over SSH.
+
+fails=0
+while :; do
+	started=$(date +%s)
+	/usr/local/bin/bsdtv "$@"
+	if [ $(( $(date +%s) - started )) -lt 10 ]; then
+		fails=$((fails + 1))
+	else
+		fails=0
+	fi
+	if [ "$fails" -ge 5 ]; then
+		logger -t bsdtv "launcher keeps exiting, waiting 30s"
+		sleep 30
+		fails=0
+	else
+		sleep 1
+	fi
+done

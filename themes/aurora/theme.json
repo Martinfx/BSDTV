@@ -1,0 +1,10 @@
+{
+  "name": "Aurora",
+  "background": "#02110f",
+  "background2": "#0b2a33",
+  "surface": "#10302f",
+  "text": "#effcf7",
+  "subtext": "#8fbfb3",
+  "accent": "#3df5b0",
+  "focus": "#d8fff0"
+}
