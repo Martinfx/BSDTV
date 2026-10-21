@@ -135,9 +135,15 @@ volby popisuje [docs/CONFIG.md](docs/CONFIG.md).
 | --- | --- | --- |
 | Šipky, OK (Enter) | pohyb, spuštění | předá se aplikaci |
 | Zpět (Esc) | odchod z mřížky, zavření panelů | předá se aplikaci |
-| Domů (`XF86HomePage`, `F12`, `Super+H`) | – | zavře aplikaci |
+| Domů / Exit na ovladači, `F12`, `Win+H`, `Alt+F4` | – | zavře aplikaci, zpět domů |
 | Menu | nastavení | předá se aplikaci |
 | Hlasitost | hlasitost (`mixer`) | hlasitost |
+
+Zpět (Esc) uvnitř aplikace, třeba YouTube nebo prohlížeče, vrací krok zpět
+v aplikaci. Z aplikace vyskočíte tlačítkem Domů. Domů se vrátíte i ukončením
+aplikace samotné (např. Ctrl+Q ve Firefoxu). Tyto klávesy obsluhuje openbox
+v televizní relaci; když zkoušíte `bsdtv --windowed` na běžné ploše, použijte
+`bsdtv-ctl home`.
 
 Ovladač v mobilu: na TV otevřete **Nastavení** a adresu odtud zadejte v mobilu
 ve stejné síti. Část `?t=` je párovací kód.

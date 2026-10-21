@@ -16,10 +16,14 @@
   <margins><top>0</top><bottom>0</bottom><left>0</left><right>0</right></margins>
 
   <keyboard>
-    <!-- Home: close the running app and show the launcher. -->
+    <!-- Home: close the running app and show the launcher. Remotes call this
+         button Home, Exit or Close; on a keyboard F12, Win+H and Alt+F4 work. -->
     <keybind key="XF86HomePage"><action name="Execute"><command>bsdtv-ctl home</command></action></keybind>
+    <keybind key="XF86Exit"><action name="Execute"><command>bsdtv-ctl home</command></action></keybind>
+    <keybind key="XF86Close"><action name="Execute"><command>bsdtv-ctl home</command></action></keybind>
     <keybind key="W-h"><action name="Execute"><command>bsdtv-ctl home</command></action></keybind>
     <keybind key="F12"><action name="Execute"><command>bsdtv-ctl home</command></action></keybind>
+    <keybind key="A-F4"><action name="Execute"><command>bsdtv-ctl home</command></action></keybind>
 
     <!-- Volume talks to mixer(8) directly so it works even if the launcher is restarting. -->
     <keybind key="XF86AudioRaiseVolume"><action name="Execute"><command>mixer vol.volume=+5%</command></action></keybind>

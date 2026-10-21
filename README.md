@@ -105,9 +105,15 @@ shell access (Claude Code, Codex, Gemini CLI). Enable SSH on the box, then paste
 | --- | --- | --- |
 | Arrows, OK (Enter) | move, open | passed to the app |
 | Back (Esc) | back to the tabs, close panels | passed to the app |
-| Home (`XF86HomePage`, `F12`, `Super+H`) | – | close the app, back home |
+| Home / Exit button, `F12`, `Win+H`, `Alt+F4` | – | close the app, back home |
 | Menu | settings | passed to the app |
 | Volume keys | volume (via `mixer`) | volume |
+
+Back (Esc) inside an app such as YouTube or the web browser goes back within
+that app; to leave it, use Home. Quitting the app itself (e.g. Ctrl+Q in
+Firefox) also returns to the home screen. These keys are bound by openbox in
+the TV session; when testing `bsdtv --windowed` on a desktop, use
+`bsdtv-ctl home` instead.
 
 Phone remote: open **Settings** on the TV and visit the address shown there
 from a phone on the same network. The `?t=` part is the pairing code.
