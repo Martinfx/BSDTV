@@ -32,7 +32,7 @@ BSDTV $VERSION installer
 Usage: sh install.sh [options]
 
   --apps "LIST"     packages for TV apps (default: "$APPS")
-                    available: kodi firefox mpv moonlight-qt retroarch
+                    available: kodi firefox mpv moonlight-qt RetroArch
   --gpu TYPE        auto | intel | amd | nvidia | generic (default: auto)
   --user NAME       account that runs the TV session (default: $TV_USER)
   --adblock         block ads and trackers for the whole network via local_unbound
@@ -164,6 +164,14 @@ if [ "$DRY_RUN" = no ]; then
 	[ "$(id -u)" -eq 0 ] || die "run as root"
 	major=$(uname -r | cut -d. -f1)
 	[ "$major" -ge 14 ] || warn "FreeBSD $major is untested, 14.x or newer is recommended"
+	# Packages built for another FreeBSD release fail with obscure linker errors later.
+	abi=$(pkg config ABI 2>/dev/null || true)
+	case $abi in
+	"" | FreeBSD:"$major":*) ;;
+	*) die "pkg installs packages for $abi, but this is FreeBSD $(freebsd-version -u).
+       Remove the ABI override from /usr/local/etc/pkg.conf or /usr/local/etc/pkg/repos/,
+       then run: pkg bootstrap -f && pkg upgrade -f" ;;
+	esac
 fi
 
 [ "$GPU" = auto ] && GPU=$(detect_gpu)
@@ -200,6 +208,19 @@ pkg_add required xorg-minimal xinit xauth xset xsetroot xdotool openbox dbus doa
 # BSDTV is C++/QML: Qt 6 to run, plus the tools to build it.
 pkg_add required qt6-base qt6-declarative qt6-tools ninja
 command -v cmake >/dev/null 2>&1 || pkg_add_any cmake-core cmake
+
+# Qt packages newer than the base system cannot even start ("version FBSD_1.x
+# required by libQt6Core.so.6 not found"). Catch that here, not in the build.
+if [ "$DRY_RUN" = no ] && [ -x "$PREFIX/libexec/qt6/qmlimportscanner" ]; then
+	qt_check=$("$PREFIX/libexec/qt6/qmlimportscanner" --help 2>&1 </dev/null || true)
+	case $qt_check in
+	*ld-elf.so*)
+		echo "$qt_check" | grep ld-elf.so >&2
+		die "the Qt packages are built for a newer FreeBSD than this system ($(freebsd-version -u), pkg ABI $(pkg config ABI)).
+       Update the base system (freebsd-update fetch install, or a newer release),
+       or point pkg at the matching repository and run: pkg upgrade -f" ;;
+	esac
+fi
 pkg_add optional unclutter-xfixes noto-basic libcec
 # shellcheck disable=SC2086 # APPS is a word list on purpose
 pkg_add optional $APPS

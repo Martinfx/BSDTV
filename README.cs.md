@@ -86,6 +86,13 @@ ukáže všechny kroky bez provedení.
 | `--audio-unit N` | zvuk na `pcmN` (HDMI často není 0, viz `cat /dev/sndstat`) |
 | `--user JMÉNO` | účet, pod kterým TV běží (výchozí `tv`) |
 
+Pokud cokoli z Qt spadne s hláškou `version FBSD_1.x required by ...
+libQt6Core.so.6 not found`, máte balíčky sestavené pro novější FreeBSD, než je
+základní systém. Porovnejte `freebsd-version -ku` s `pkg config ABI` a pak buď
+aktualizujte systém (`freebsd-update`), nebo odstraňte vynucené ABI a spusťte
+`pkg bootstrap -f && pkg upgrade -f`. Instalátor to teď kontroluje hned na
+začátku.
+
 ### S pomocí AI asistenta
 
 Stejně jako u CleanYourTV můžete nastavení svěřit asistentovi s přístupem

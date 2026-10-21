@@ -87,6 +87,12 @@ first if you want to see every step.
 | `--audio-unit N` | send sound to `pcmN` (HDMI is often not unit 0, see `cat /dev/sndstat`) |
 | `--user NAME` | account that runs the TV (default `tv`) |
 
+If anything Qt fails with `version FBSD_1.x required by ... libQt6Core.so.6 not
+found`, your packages are built for a newer FreeBSD than the base system. Check
+`freebsd-version -ku` against `pkg config ABI`, then either update the base
+system (`freebsd-update`) or remove the ABI override and run
+`pkg bootstrap -f && pkg upgrade -f`. The installer checks for this up front.
+
 ### Let an AI assistant do it
 
 Like CleanYourTV, BSDTV is easy to set up with a coding assistant that has
