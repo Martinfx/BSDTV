@@ -79,5 +79,14 @@ FocusScope {
             KeyNavigation.left: settingsButton
             onClicked: bar.powerRequested()
         }
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: "BSDTV"
+            color: bar.theme.text
+            font.pixelSize: bar.unit * 0.026
+            font.weight: Font.DemiBold
+            leftPadding: bar.unit * 0.006
+            Accessible.ignored: true
+        }
     }
 }

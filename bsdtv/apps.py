@@ -22,10 +22,12 @@ class App:
     requires: list = field(default_factory=list)
     category: str = ""
     tagline: str = ""
+    text_color: str = "#ffffff"
 
     def as_dict(self):
         return {"appId": self.id, "name": self.name, "caption": self.caption, "color": self.color,
-                "icon": self.icon, "tagline": self.tagline or self.caption, "image": ""}
+                "icon": self.icon, "tagline": self.tagline or self.caption, "image": "",
+                "textColor": self.text_color}
 
     def command(self, variables):
         """Return the argv to run, with {placeholders} filled from ``variables``."""
@@ -67,6 +69,7 @@ def parse_apps(data, lang="en"):
             requires=list(raw.get("requires", [])),
             category=raw.get("category", ""),
             tagline=localized(raw.get("tagline"), lang),
+            text_color=raw.get("text_color", "#ffffff"),
         ))
     return apps
 
@@ -100,14 +103,18 @@ CATEGORY_ROWS = ["streaming", "media", "games"]
 
 
 def home_rows(apps, dock_ids):
-    """Rows for the Google TV-style home: your apps (favourites first), then one row per category."""
-    favourites = order_dock(apps, dock_ids)
-    rest = [a for a in apps if a not in favourites]
-    rows = [{"key": "your_apps", "apps": [a.as_dict() for a in favourites + rest]}] if apps else []
+    """Rows for the TV-style home: one row of wide cards per category, with "Your apps"
+    (round icons, favourites first) as the second row, right below the first cards."""
+    rows = []
     for category in CATEGORY_ROWS:
         members = [a.as_dict() for a in apps if a.category == category]
         if members:
-            rows.append({"key": category, "apps": members})
+            rows.append({"key": category, "style": "cards", "apps": members})
+    if apps:
+        favourites = order_dock(apps, dock_ids)
+        rest = [a for a in apps if a not in favourites]
+        rows.insert(min(1, len(rows)), {"key": "your_apps", "style": "round",
+                                         "apps": [a.as_dict() for a in favourites + rest]})
     return rows
 
 
@@ -122,6 +129,6 @@ def featured(apps, cfg):
         slide = app.as_dict()
         for key in ("title", "tagline", "image", "color"):
             if entry.get(key):
-                slide["name" if key == "title" else key] = entry[key]
+                slide[key] = entry[key]
         slides.append(slide)
     return slides or [a.as_dict() for a in apps[:5]]

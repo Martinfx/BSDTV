@@ -9,7 +9,8 @@ FocusScope {
     readonly property real unit: home.height
     readonly property real margin: home.width * 0.055
     readonly property int columns: Math.max(4, Math.min(8, (TV.settings.columns || 5) + 1))
-    readonly property real tileWidth: (home.width - 2 * home.margin) / (home.columns + 0.4)
+    // About seven and a half cards across, the last one cut by the screen edge.
+    readonly property real tileWidth: (home.width - home.margin) / (home.columns + 1.6)
     readonly property real gridSpacing: home.unit * 0.024
     readonly property real gridTileWidth: (home.width - 2 * home.margin - (home.columns - 1) * home.gridSpacing) / home.columns
     readonly property Item page: topBar.currentTab === 0 ? forYou : appsGrid
@@ -38,6 +39,15 @@ FocusScope {
 
     TvTopBar {
         id: topBar
+        z: 1
+        // Out of the way once you scroll into the rows, back when you return to the top.
+        opacity: forYou.currentIndex <= 1 || topBar.activeFocus || topBar.currentTab !== 0 ? 1 : 0
+
+        Behavior on opacity {
+            enabled: !home.reducedMotion
+            OpacityAnimator { duration: 200 }
+        }
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -52,23 +62,18 @@ FocusScope {
 
     ListView {
         id: forYou
-        anchors.top: topBar.bottom
-        anchors.topMargin: home.unit * 0.04
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: home.margin
-        // Rows run off the right edge, hinting that there is more to scroll to.
+        // Full screen: the banner sits under the tab bar and rows run off the right edge.
+        anchors.fill: parent
         visible: topBar.currentTab === 0
         focus: true
         clip: true
         interactive: false
         keyNavigationEnabled: true
-        spacing: home.unit * 0.045
+        spacing: home.unit * 0.035
         bottomMargin: home.unit * 0.12
         highlightMoveDuration: home.reducedMotion ? 0 : 250
-        preferredHighlightBegin: 0
-        preferredHighlightEnd: forYou.height * 0.5
+        preferredHighlightBegin: home.unit * 0.08
+        preferredHighlightEnd: forYou.height * 0.85
         highlightRangeMode: ListView.ApplyRange
         model: 1 + TV.rows.length
         KeyNavigation.priority: KeyNavigation.AfterItem
@@ -80,8 +85,7 @@ FocusScope {
             required property int index
             readonly property var row: rowLoader.index > 0 ? TV.rows[rowLoader.index - 1] : null
 
-            // The banner keeps the right margin; rows run to the screen edge.
-            width: rowLoader.index === 0 ? forYou.width - home.margin : forYou.width
+            width: forYou.width
             sourceComponent: rowLoader.index === 0 ? heroComponent : rowComponent
         }
     }
@@ -89,7 +93,8 @@ FocusScope {
     Component {
         id: heroComponent
         HeroBanner {
-            height: home.unit * 0.42
+            height: home.unit * 0.5
+            inset: home.margin
             focus: true
             unit: home.unit
             slides: TV.featured
@@ -107,6 +112,8 @@ FocusScope {
             unit: home.unit
             title: home.rowTitle(row ? row.key : "")
             apps: row ? row.apps : []
+            round: row ? row.style === "round" : false
+            inset: home.margin
             tileWidth: home.tileWidth
             reducedMotion: home.reducedMotion
             runningApp: TV.runningApp

@@ -4,12 +4,12 @@
 <context>
     <name>HeroBanner</name>
     <message>
-        <location filename="../qml/HeroBanner.qml" line="102"/>
+        <location filename="../qml/HeroBanner.qml" line="126"/>
         <source>Featured</source>
         <translation>Doporučujeme</translation>
     </message>
     <message>
-        <location filename="../qml/HeroBanner.qml" line="136"/>
+        <location filename="../qml/HeroBanner.qml" line="141"/>
         <source>Open</source>
         <translation>Spustit</translation>
     </message>
@@ -160,6 +160,7 @@
     <message>
         <location filename="../qml/TopBar.qml" line="48"/>
         <source>dddd d MMMM</source>
+        <extracomment>Date format for the clock, see QDate::toString().</extracomment>
         <translation>dddd d. MMMM</translation>
     </message>
     <message>
@@ -181,22 +182,22 @@
 <context>
     <name>TvHome</name>
     <message>
-        <location filename="../qml/TvHome.qml" line="118"/>
+        <location filename="../qml/TvHome.qml" line="126"/>
         <source>Your apps</source>
         <translation>Vaše aplikace</translation>
     </message>
     <message>
-        <location filename="../qml/TvHome.qml" line="119"/>
+        <location filename="../qml/TvHome.qml" line="127"/>
         <source>Streaming</source>
         <translation>Streamování</translation>
     </message>
     <message>
-        <location filename="../qml/TvHome.qml" line="120"/>
+        <location filename="../qml/TvHome.qml" line="128"/>
         <source>Movies &amp; music</source>
         <translation>Filmy a hudba</translation>
     </message>
     <message>
-        <location filename="../qml/TvHome.qml" line="121"/>
+        <location filename="../qml/TvHome.qml" line="129"/>
         <source>Games</source>
         <translation>Hry</translation>
     </message>

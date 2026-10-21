@@ -26,7 +26,7 @@ def test_broken_json_is_ignored(isolated_dirs, capsys):
     user = config.user_dir()
     user.mkdir(parents=True)
     (user / "config.json").write_text("{nope")
-    assert config.load_config()["theme"] == "midnight"
+    assert config.load_config()["theme"] == "graphite"
     assert "ignoring unreadable" in capsys.readouterr().out
 
 
@@ -39,10 +39,11 @@ def test_save_user_setting_keeps_other_keys():
 
 def test_bundled_themes_are_complete():
     themes = config.list_themes()
-    assert {"midnight", "aurora", "sunrise", "beastie"} <= set(themes)
+    assert {"graphite", "midnight", "aurora", "sunrise", "beastie"} <= set(themes)
     for theme in themes.values():
         assert set(config.THEME_DEFAULTS) <= set(theme)
 
 
-def test_unknown_theme_falls_back_to_midnight():
-    assert config.load_theme("does-not-exist")["name"] == "Midnight"
+def test_unknown_theme_falls_back_to_graphite():
+    theme = config.load_theme("does-not-exist")
+    assert theme["name"] == "Graphite" and theme["tiles"] == "flat"

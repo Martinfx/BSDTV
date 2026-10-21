@@ -23,6 +23,7 @@ class AppModel(QAbstractListModel):
         Qt.ItemDataRole.UserRole + 3: b"caption",
         Qt.ItemDataRole.UserRole + 4: b"color",
         Qt.ItemDataRole.UserRole + 5: b"icon",
+        Qt.ItemDataRole.UserRole + 6: b"textColor",
     }
 
     def __init__(self, parent=None):
@@ -48,7 +49,7 @@ class AppModel(QAbstractListModel):
             return None
         app = self._apps[index.row()]
         return {b"appId": app.id, b"name": app.name, b"caption": app.caption,
-                b"color": app.color, b"icon": app.icon}[name]
+                b"color": app.color, b"icon": app.icon, b"textColor": app.text_color}[name]
 
 
 class _RemoteBridge(QObject, remote.Controller):

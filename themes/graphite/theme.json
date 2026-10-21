@@ -1,0 +1,11 @@
+{
+  "name": "Graphite",
+  "background": "#111214",
+  "background2": "#1b1c1f",
+  "surface": "#2a2b2f",
+  "text": "#e8eaed",
+  "subtext": "#9aa0a6",
+  "accent": "#8ab4f8",
+  "focus": "#e8eaed",
+  "tiles": "flat"
+}

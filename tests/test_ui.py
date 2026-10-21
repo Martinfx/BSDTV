@@ -84,10 +84,12 @@ def test_banner_rows_and_launch(ui):
     press(window, Qt.Key_Return)
     assert started == ["kodi"]  # first featured slide
 
-    press(window, Qt.Key_Down, Qt.Key_Right)
-    assert focused(window) == "YouTube"  # "Your apps" row
     press(window, Qt.Key_Down)
-    assert focused(window) == "YouTube"  # "Streaming" row
+    assert focused(window) == "YouTube"  # "Streaming" cards
+    press(window, Qt.Key_Down)
+    assert focused(window) == "Kodi"  # "Your apps" round icons, favourites first
+    press(window, Qt.Key_Right)
+    assert focused(window) == "YouTube"
     press(window, Qt.Key_Down, Qt.Key_Down)
     assert focused(window) == "Moonlight"  # "Movies & music" then "Games"
     press(window, Qt.Key_Return)

@@ -1,15 +1,23 @@
 import QtQuick
 import BSDTV
 
+// Full-bleed banner at the top of the home screen, like the featured area of a
+// smart TV: artwork on the right, a scrim on the left with the title.
 FocusScope {
     id: hero
 
     property var slides: []
     property int index: 0
     property real unit: 720
+    property real inset: 80
     property bool reducedMotion: false
     readonly property var theme: TV.theme
     readonly property var slide: hero.slides.length > 0 ? hero.slides[Math.min(hero.index, hero.slides.length - 1)] : null
+    // The slide's most colourful brand colour: the background, or the logo colour on near-black banners.
+    readonly property color brand: !hero.slide ? hero.theme.accent
+        : Qt.color(hero.slide.color).hslLightness >= 0.2 ? hero.slide.color
+        : Qt.color(hero.slide.textColor).hslSaturation > 0.4 ? hero.slide.textColor : Qt.lighter(hero.slide.color, 2.5)
+    readonly property color base: hero.theme.background
 
     signal launched(string appId)
 
@@ -19,6 +27,7 @@ FocusScope {
     }
 
     activeFocusOnTab: true
+    clip: true
     Accessible.role: Accessible.Button
     Accessible.name: hero.slide ? hero.slide.name : ""
 
@@ -29,134 +38,130 @@ FocusScope {
         onTriggered: hero.step(1)
     }
 
+    // Stand-in artwork when a slide has no image: the brand colour with soft rings.
     Rectangle {
-        id: card
         anchors.fill: parent
-        radius: hero.unit * 0.03
-        clip: true
-        color: hero.theme.surface
-        border.width: hero.activeFocus ? 4 : 0
-        border.color: hero.theme.focus
+        visible: !artwork.visible
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.3; color: hero.base }
+            GradientStop { position: 1.0; color: Qt.darker(hero.brand, 1.2) }
+        }
+    }
 
+    Repeater {
+        model: 3
+        delegate: Rectangle {
+            required property int index
+            width: hero.height * (1.5 - index * 0.36)
+            height: width
+            radius: width / 2
+            x: hero.width * 0.74 - width / 2
+            y: hero.height * 0.5 - height / 2
+            color: "transparent"
+            border.width: hero.height * 0.045
+            border.color: Qt.rgba(1, 1, 1, 0.05 + index * 0.03)
+            visible: !artwork.visible
+            Accessible.ignored: true
+        }
+    }
+
+    Image {
+        id: artwork
+        anchors.fill: parent
+        visible: status === Image.Ready
+        source: hero.slide && hero.slide.image ? (hero.slide.image.indexOf("/") === 0 ? "file://" + hero.slide.image : hero.slide.image) : ""
+        sourceSize.width: width
+        sourceSize.height: height
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+    }
+
+    // Scrims: readable text on the left, and a seamless fade into the rows below.
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0; color: Qt.rgba(hero.base.r, hero.base.g, hero.base.b, 0.95) }
+            GradientStop { position: 0.4; color: Qt.rgba(hero.base.r, hero.base.g, hero.base.b, 0.6) }
+            GradientStop { position: 0.75; color: Qt.rgba(hero.base.r, hero.base.g, hero.base.b, 0.0) }
+        }
+    }
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(hero.base.r, hero.base.g, hero.base.b, 0.6) }
+            GradientStop { position: 0.25; color: Qt.rgba(hero.base.r, hero.base.g, hero.base.b, 0.0) }
+            GradientStop { position: 0.75; color: Qt.rgba(hero.base.r, hero.base.g, hero.base.b, 0.0) }
+            GradientStop { position: 1.0; color: hero.base }
+        }
+    }
+
+    Column {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: hero.inset
+        anchors.bottomMargin: hero.height * 0.1
+        width: hero.width * 0.5
+        spacing: hero.unit * 0.01
+
+        // The app above a custom title, like the provider logo above a film on a smart TV.
+        Text {
+            visible: hero.slide !== null && !!hero.slide.title
+            text: hero.slide ? hero.slide.name : ""
+            color: hero.brand
+            font.pixelSize: hero.unit * 0.026
+            font.weight: Font.Bold
+        }
+        Text {
+            width: parent.width
+            text: hero.slide ? (hero.slide.title || hero.slide.name) : ""
+            color: hero.theme.text
+            elide: Text.ElideRight
+            font.pixelSize: hero.unit * 0.075
+            font.weight: Font.DemiBold
+        }
+        Text {
+            width: parent.width
+            text: hero.slide ? qsTr("Featured") + "  |  " + hero.slide.tagline : ""
+            color: hero.theme.text
+            elide: Text.ElideRight
+            font.pixelSize: hero.unit * 0.024
+        }
+        Item { width: 1; height: hero.unit * 0.006 }
         Rectangle {
-            anchors.fill: parent
-            anchors.margins: card.border.width
-            radius: card.radius
-            gradient: Gradient {
-                orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: Qt.darker(hero.slide ? hero.slide.color : hero.theme.accent, 3.2) }
-                GradientStop { position: 0.55; color: Qt.darker(hero.slide ? hero.slide.color : hero.theme.accent, 1.6) }
-                GradientStop { position: 1.0; color: hero.slide ? hero.slide.color : hero.theme.accent }
+            width: openLabel.implicitWidth + hero.unit * 0.05
+            height: hero.unit * 0.054
+            radius: height / 2
+            color: hero.activeFocus ? hero.theme.focus : Qt.rgba(1, 1, 1, 0.16)
+
+            Text {
+                id: openLabel
+                anchors.centerIn: parent
+                text: "▶  " + qsTr("Open")
+                color: hero.activeFocus ? hero.theme.background : hero.theme.text
+                font.pixelSize: hero.unit * 0.022
+                font.weight: Font.DemiBold
             }
         }
+    }
 
-        // Large soft rings on the right, a stand-in for artwork when a slide has no image.
+    Row {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: hero.inset
+        anchors.bottomMargin: hero.height * 0.12
+        spacing: hero.unit * 0.01
+
         Repeater {
-            model: 3
+            model: hero.slides.length
             delegate: Rectangle {
                 required property int index
-                width: card.height * (1.6 - index * 0.38)
-                height: width
-                radius: width / 2
-                x: card.width * 0.72 - width / 2
-                y: card.height * 0.5 - height / 2
-                color: "transparent"
-                border.width: card.height * 0.05
-                border.color: Qt.rgba(1, 1, 1, 0.06 + index * 0.03)
-                visible: !artwork.visible
-                Accessible.ignored: true
-            }
-        }
-
-        Image {
-            id: artwork
-            anchors.fill: parent
-            anchors.margins: card.border.width
-            visible: status === Image.Ready
-            source: hero.slide && hero.slide.image ? (hero.slide.image.indexOf("/") === 0 ? "file://" + hero.slide.image : hero.slide.image) : ""
-            sourceSize.width: width
-            sourceSize.height: height
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: card.border.width
-            visible: artwork.visible
-            gradient: Gradient {
-                orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.85) }
-                GradientStop { position: 0.6; color: Qt.rgba(0, 0, 0, 0.1) }
-            }
-        }
-
-        Column {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: card.width * 0.05
-            width: card.width * 0.5
-            spacing: hero.unit * 0.012
-
-            Text {
-                text: qsTr("Featured")
-                color: Qt.rgba(1, 1, 1, 0.7)
-                font.pixelSize: hero.unit * 0.02
-                font.weight: Font.DemiBold
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: 1.5
-            }
-            Text {
-                width: parent.width
-                text: hero.slide ? hero.slide.name : ""
-                color: "white"
-                elide: Text.ElideRight
-                font.pixelSize: hero.unit * 0.075
-                font.weight: Font.Bold
-            }
-            Text {
-                width: parent.width
-                text: hero.slide ? hero.slide.tagline : ""
-                color: Qt.rgba(1, 1, 1, 0.85)
-                wrapMode: Text.WordWrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-                font.pixelSize: hero.unit * 0.028
-            }
-            Item { width: 1; height: hero.unit * 0.01 }
-            Rectangle {
-                width: openLabel.implicitWidth + hero.unit * 0.05
-                height: hero.unit * 0.058
+                width: index === hero.index ? hero.unit * 0.03 : hero.unit * 0.01
+                height: hero.unit * 0.01
                 radius: height / 2
-                color: hero.activeFocus ? "white" : Qt.rgba(1, 1, 1, 0.18)
-
-                Text {
-                    id: openLabel
-                    anchors.centerIn: parent
-                    text: "▶  " + qsTr("Open")
-                    color: hero.activeFocus ? "#111" : "white"
-                    font.pixelSize: hero.unit * 0.024
-                    font.weight: Font.DemiBold
-                }
-            }
-        }
-
-        Row {
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: card.height * 0.08
-            spacing: hero.unit * 0.01
-
-            Repeater {
-                model: hero.slides.length
-                delegate: Rectangle {
-                    required property int index
-                    width: index === hero.index ? hero.unit * 0.03 : hero.unit * 0.01
-                    height: hero.unit * 0.01
-                    radius: height / 2
-                    color: index === hero.index ? "white" : Qt.rgba(1, 1, 1, 0.4)
-                    Accessible.ignored: true
-                }
+                color: index === hero.index ? hero.theme.text : Qt.rgba(1, 1, 1, 0.35)
+                Accessible.ignored: true
             }
         }
     }

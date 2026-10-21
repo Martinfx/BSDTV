@@ -14,7 +14,7 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 SOURCE_ROOT = PACKAGE_DIR.parent
 
 DEFAULTS = {
-    "theme": "midnight",
+    "theme": "graphite",
     "layout": "tv",
     "language": "auto",
     "featured": [],
@@ -115,6 +115,8 @@ THEME_DEFAULTS = {
     "accent": "#7aa2ff",
     "focus": "#ffffff",
     "wallpaper": "",
+    # "gradient": glossy tiles in the app colour; "flat": solid brand-colour tiles like Android TV.
+    "tiles": "gradient",
 }
 
 
@@ -137,4 +139,4 @@ def list_themes():
 
 def load_theme(theme_id):
     themes = list_themes()
-    return themes.get(theme_id) or themes.get("midnight") or dict(THEME_DEFAULTS)
+    return themes.get(theme_id) or themes.get("graphite") or dict(THEME_DEFAULTS)

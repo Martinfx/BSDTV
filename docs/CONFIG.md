@@ -93,7 +93,8 @@ entry with the same `id` as a built-in app replaces it.
 | `name`, `caption` | text on the tile and above the dock; a string or `{"en": "...", "cs": "..."}` |
 | `tagline` | banner text (falls back to `caption`); can be translated like `caption` |
 | `category` | `streaming`, `media` or `games`: puts the app in that row on the home screen |
-| `color` | tile colour and ambient glow |
+| `color` | tile background (the brand colour) |
+| `text_color` | label colour on the tile, e.g. Netflix red on black |
 | `icon` | optional image path (absolute, or a URL) shown instead of the name |
 | `exec` | program and arguments; `{name}` is replaced from `vars`, `~` is expanded |
 | `requires` | `vars` that must be set for the tile to appear |
@@ -117,9 +118,14 @@ A theme is a folder with a `theme.json`:
   "subtext": "#94b8a0",
   "accent": "#5fdc8c",
   "focus": "#ffffff",
+  "tiles": "flat",
   "wallpaper": "wallpaper.jpg"
 }
 ```
+
+`tiles` is `flat` (solid brand-colour tiles, as on Android TV; used by the
+default Graphite theme) or `gradient` (glossy tiles in the app's most vivid
+colour).
 
 Put it in `/usr/local/etc/bsdtv/themes/forest/` and pick it in Settings or with
 `bsdtv-ctl theme forest`. `wallpaper` is optional, relative to the theme folder.

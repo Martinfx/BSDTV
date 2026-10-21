@@ -19,9 +19,10 @@ nothing to remove in the first place.
 ## What you get
 
 - **Home screen in the style of today's smart TVs** (Google TV and the like):
-  "For you" and "Apps" tabs, a large rotating banner of featured apps, and rows
-  below it: your apps, streaming, movies & music, games. Made for a remote:
-  arrows, OK, Back, Home. Four themes. A simpler "classic" home (clock, dock
+  "For you" and "Apps" tabs, a full-width rotating banner of featured apps,
+  then rows of cards (streaming, movies & music, games) and "Your apps" as
+  round icons. Dark graphite colours with flat tiles in each app's brand
+  colours. Made for a remote: arrows, OK, Back, Home. Five themes. A simpler "classic" home (clock, dock
   and grid) is one switch away in Settings.
 - **English and Czech**, following the system language or chosen in Settings.
 - **Apps**: Kodi, YouTube (the TV interface, with uBlock Origin), Jellyfin, a

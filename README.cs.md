@@ -20,9 +20,10 @@ nic zbytečného není.
 ## Co dostanete
 
 - **Domovská obrazovka jako u dnešních chytrých TV** (Google TV apod.):
-  záložky „Pro vás" a „Aplikace", velký rotující banner s doporučenými
-  aplikacemi a pod ním řady: vaše aplikace, streamování, filmy a hudba, hry.
-  Ovládání šipkami, OK, Zpět a Domů. Čtyři barevné motivy. Jednodušší
+  záložky „Pro vás" a „Aplikace", rotující banner přes celou šířku, pod ním
+  řady karet (streamování, filmy a hudba, hry) a „Vaše aplikace" jako kulaté
+  ikony. Tmavé grafitové barvy a ploché dlaždice v barvách jednotlivých
+  značek. Ovládání šipkami, OK, Zpět a Domů. Pět barevných motivů. Jednodušší
   „klasická" obrazovka (hodiny, dok a mřížka) se zapne v Nastavení.
 - **Čeština a angličtina**, podle jazyka systému nebo volby v Nastavení.
 - **Aplikace**: Kodi, YouTube (TV rozhraní, s uBlock Origin), Jellyfin,
